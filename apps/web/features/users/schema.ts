@@ -25,6 +25,6 @@ export const userUpdateSchema = z.object({
     .transform((v) => v || undefined),
 });
 
-export type UserCreateInput = z.infer<typeof userCreateSchema>;
-export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
+export type UserCreatePayload = z.infer<typeof userCreateSchema>;
+export type UserUpdatePayload = z.infer<typeof userUpdateSchema>;
 export type UserFormValues = z.input<typeof userUpdateSchema>;

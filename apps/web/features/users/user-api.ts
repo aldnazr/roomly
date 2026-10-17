@@ -1,11 +1,7 @@
 import { API_ENDPOINTS } from "@/lib/api/api-endpoints";
 import { axiosInstance } from "@/lib/api/axios-instance";
-import {
-  UserCreatePayload,
-  UserDetailResponse,
-  UserResponse,
-  UserUpdatePayload,
-} from "./types";
+import { UserDetailResponse, UserResponse } from "./types";
+import { UserCreatePayload, UserUpdatePayload } from "./schema";
 
 export const userApi = {
   list: async () =>

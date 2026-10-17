@@ -146,7 +146,7 @@ export function RoomDetail({
             </div>
           </div>
         </div>
-      : <div className="flex aspect-21/9 w-full flex-col items-center justify-center gap-2 rounded-3xl border border-dashed border-border/70 bg-muted/40 text-muted-foreground">
+        : <div className="flex aspect-21/9 w-full flex-col items-center justify-center gap-2 rounded-3xl border border-dashed border-border/70 bg-muted/40 text-muted-foreground">
           <IconPhotoOff className="size-8" />
           <p className="text-xs">No photos uploaded for this room</p>
         </div>
@@ -173,7 +173,7 @@ export function RoomDetail({
 
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-foreground">
-              About this room
+              Tentang kamar ini
             </h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
               {room.description || "No description provided for this room."}
@@ -183,7 +183,7 @@ export function RoomDetail({
           {room.amenities && room.amenities.length > 0 && (
             <div className="border-t border-border/60 pt-6">
               <h2 className="text-sm font-semibold text-foreground mb-3">
-                Facilities
+                Fasilitas
               </h2>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {room.amenities.map((a) => (

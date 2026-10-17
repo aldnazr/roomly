@@ -13,17 +13,3 @@ export interface User {
 export interface UserDetailResponse {
   data: User;
 }
-
-export interface UserCreatePayload {
-  username: string;
-  email: string;
-  password: string;
-  role: string;
-}
-
-export interface UserUpdatePayload {
-  username?: string;
-  email?: string;
-  password?: string;
-  role?: string;
-}

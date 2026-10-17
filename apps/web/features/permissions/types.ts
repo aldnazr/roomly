@@ -1,13 +1,13 @@
-export interface PermissionResponse {
+export type PermissionResponse = {
   data: Permission[];
-}
+};
 
-export interface Permission {
+export type Permission = {
   slug: string;
   name: string;
   description: string;
-}
+};
 
-export interface SetPermissionPayload {
+export type SetPermissionPayload = {
   permissions: string[];
-}
+};

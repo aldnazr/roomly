@@ -1,14 +1,14 @@
-export interface SetRoleRequest {
+export type SetRoleRequest = {
   permissions: string[];
-}
+};
 
-export interface RoleResponse {
+export type RoleResponse = {
   data: Role[];
-}
+};
 
-export interface Role {
+export type Role = {
   slug: string;
   name: string;
   description: string;
   permissions: string[];
-}
+};

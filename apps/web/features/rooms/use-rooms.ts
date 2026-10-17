@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { roomApi } from "./room-api";
 
 export const roomKeys = {
@@ -11,6 +11,12 @@ export function useRoom() {
   return useQuery({
     queryKey: roomKeys.list(),
     queryFn: roomApi.list,
+  });
+}
+
+export function useCreateRoom() {
+  return useMutation({
+    mutationFn: roomApi.create,
   });
 }
 

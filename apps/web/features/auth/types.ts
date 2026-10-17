@@ -14,21 +14,21 @@ export type LoginResponse = {
   };
 };
 
-export interface MeResponse {
+export type MeResponse = {
   data: MeData;
-}
+};
 
-export interface MeData {
+export type MeData = {
   id: number;
   username: string;
   name: string;
   email: string;
   role: MeRole;
   permissions: string[];
-}
+};
 
-export interface MeRole {
+export type MeRole = {
   slug: string;
   name: string;
   description: string;
-}
+};

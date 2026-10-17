@@ -1,15 +1,15 @@
-export interface UserResponse {
+export type UserResponse = {
   data: User[];
-}
+};
 
-export interface User {
+export type User = {
   id: number;
   username: string;
   name: string;
   email: string;
   role: string;
-}
+};
 
-export interface UserDetailResponse {
+export type UserDetailResponse = {
   data: User;
-}
+};

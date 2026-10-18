@@ -30,6 +30,7 @@ import { toast } from "@/components/ui/toast";
 import { RoomCreateInput, roomCreateSchema } from "@/features/rooms/schema";
 import { RoomCreatePayload } from "@/features/rooms/types";
 import { useCreateRoom } from "@/features/rooms/use-rooms";
+import { Textarea } from "@/components/ui/textarea";
 
 const PRESET_AMENITIES = [
   "WiFi",
@@ -78,7 +79,9 @@ export default function RoomCreate() {
   const watchBasePrice = useWatch({ control, name: "basePrice" });
 
   const formattedPrice =
-    typeof watchBasePrice === "number" && !isNaN(watchBasePrice) && watchBasePrice > 0
+    typeof watchBasePrice === "number" &&
+    !isNaN(watchBasePrice) &&
+    watchBasePrice > 0
       ? new Intl.NumberFormat("id-ID", {
           style: "currency",
           currency: "IDR",
@@ -122,7 +125,9 @@ export default function RoomCreate() {
 
     const urlResult = z.string().url("Must be a valid URL").safeParse(trimmed);
     if (!urlResult.success) {
-      setPhotoInputError("Please enter a valid URL starting with http:// or https://");
+      setPhotoInputError(
+        "Please enter a valid URL starting with http:// or https://",
+      );
       return;
     }
 
@@ -171,15 +176,20 @@ export default function RoomCreate() {
     <div className="w-full py-6 sm:py-8 px-4 sm:px-6">
       <div className="mb-6 sm:mb-8 max-w-3xl mx-auto">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-          Create Room Type
+          Create Room
         </h1>
         <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
-          Define a new category of accommodation including base pricing, capacity, amenities, and photo gallery.
+          Define a new category of accommodation including base pricing,
+          capacity, amenities, and photo gallery.
         </p>
       </div>
 
       <Card className="max-w-3xl w-full mx-auto p-6 sm:p-8 rounded-xl shadow-xs">
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-8">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          className="flex flex-col gap-8"
+        >
           {/* Section 1: Basic Information */}
           <FieldSet>
             <FieldLegend>
@@ -193,7 +203,8 @@ export default function RoomCreate() {
             <div className="flex flex-col gap-6">
               <Field data-invalid={!!errors.roomName}>
                 <FieldLabel htmlFor="roomName">
-                  Room Type Name <span className="text-destructive ml-0.5">*</span>
+                  Room Type Name{" "}
+                  <span className="text-destructive ml-0.5">*</span>
                 </FieldLabel>
                 <Input
                   id="roomName"
@@ -201,24 +212,32 @@ export default function RoomCreate() {
                   aria-invalid={!!errors.roomName}
                   {...register("roomName")}
                 />
-                <FieldDescription>Clear, descriptive category name (1–100 characters).</FieldDescription>
+                <FieldDescription>
+                  Clear, descriptive category name (1–100 characters).
+                </FieldDescription>
                 <FieldError errors={[{ message: errors.roomName?.message }]} />
               </Field>
 
               <Field data-invalid={!!errors.description}>
                 <FieldLabel htmlFor="description">
-                  Description <span className="text-xs text-muted-foreground font-normal ml-1.5">(Optional)</span>
+                  Description{" "}
+                  <span className="text-xs text-muted-foreground font-normal ml-1.5">
+                    (Optional)
+                  </span>
                 </FieldLabel>
-                <textarea
+                <Textarea
                   id="description"
                   rows={3}
                   placeholder="Detailed description of room layout, bed type, view, and unique features..."
                   aria-invalid={!!errors.description}
-                  className="w-full min-h-[80px] rounded-md border border-input bg-input/30 p-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 aria-invalid:border-destructive transition-colors"
                   {...register("description")}
                 />
-                <FieldDescription>Highlight key features for guests (max 1,000 characters).</FieldDescription>
-                <FieldError errors={[{ message: errors.description?.message }]} />
+                <FieldDescription>
+                  Highlight key features for guests (max 1,000 characters).
+                </FieldDescription>
+                <FieldError
+                  errors={[{ message: errors.description?.message }]}
+                />
               </Field>
             </div>
           </FieldSet>
@@ -236,7 +255,8 @@ export default function RoomCreate() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <Field data-invalid={!!errors.basePrice}>
                 <FieldLabel htmlFor="basePrice">
-                  Base Price Per Night <span className="text-destructive ml-0.5">*</span>
+                  Base Price Per Night{" "}
+                  <span className="text-destructive ml-0.5">*</span>
                 </FieldLabel>
                 <div
                   className="flex items-center rounded-md border border-input bg-input/30 overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-colors data-[invalid=true]:border-destructive"
@@ -267,7 +287,8 @@ export default function RoomCreate() {
 
               <Field data-invalid={!!errors.capacity}>
                 <FieldLabel htmlFor="capacity">
-                  Guest Capacity <span className="text-destructive ml-0.5">*</span>
+                  Guest Capacity{" "}
+                  <span className="text-destructive ml-0.5">*</span>
                 </FieldLabel>
                 <div
                   className="flex items-center rounded-md border border-input bg-input/30 overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-colors data-[invalid=true]:border-destructive"
@@ -287,7 +308,9 @@ export default function RoomCreate() {
                     guests
                   </span>
                 </div>
-                <FieldDescription>Maximum occupancy (1–20 guests).</FieldDescription>
+                <FieldDescription>
+                  Maximum occupancy (1–20 guests).
+                </FieldDescription>
                 <FieldError errors={[{ message: errors.capacity?.message }]} />
               </Field>
             </div>
@@ -319,7 +342,9 @@ export default function RoomCreate() {
                           : "bg-muted/40 hover:bg-muted/80 text-muted-foreground border border-border/60 text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer"
                       }
                     >
-                      {isSelected && <IconCheck className="size-3.5 text-primary" />}
+                      {isSelected && (
+                        <IconCheck className="size-3.5 text-primary" />
+                      )}
                       {preset}
                     </button>
                   );
@@ -372,7 +397,8 @@ export default function RoomCreate() {
               )}
 
               <FieldDescription>
-                Select presets or enter custom amenities (up to 20 tags, max 50 chars each).
+                Select presets or enter custom amenities (up to 20 tags, max 50
+                chars each).
               </FieldDescription>
               <FieldError errors={[{ message: errors.amenities?.message }]} />
             </Field>
@@ -419,14 +445,17 @@ export default function RoomCreate() {
               </div>
 
               {photoInputError && (
-                <p className="text-xs font-medium text-destructive mt-1">{photoInputError}</p>
+                <p className="text-xs font-medium text-destructive mt-1">
+                  {photoInputError}
+                </p>
               )}
 
               {watchPhotos.length === 0 ? (
                 <div className="border border-dashed border-border/80 rounded-lg p-6 text-center bg-muted/20 flex flex-col items-center justify-center gap-2 mt-4">
                   <IconPhoto className="size-8 text-muted-foreground/60" />
                   <p className="text-xs text-muted-foreground font-medium">
-                    No photo URLs added yet. Add image links above to preview gallery.
+                    No photo URLs added yet. Add image links above to preview
+                    gallery.
                   </p>
                 </div>
               ) : (
@@ -434,7 +463,7 @@ export default function RoomCreate() {
                   {watchPhotos.map((url, idx) => (
                     <div
                       key={`${url}-${idx}`}
-                      className="aspect-[16/10] relative rounded-lg overflow-hidden border border-border bg-muted/30 group"
+                      className="aspect-16/10 relative rounded-lg overflow-hidden border border-border bg-muted/30 group"
                     >
                       <img
                         src={url}
@@ -460,7 +489,8 @@ export default function RoomCreate() {
               )}
 
               <FieldDescription>
-                Provide up to 10 valid image URLs (http:// or https://). First image serves as room cover.
+                Provide up to 10 valid image URLs (http:// or https://). First
+                image serves as room cover.
               </FieldDescription>
               <FieldError errors={[{ message: errors.photos?.message }]} />
             </Field>

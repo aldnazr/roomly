@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/api/axios-instance";
-import { RoomDetailResponse, RoomResponse } from "./types";
+import { RoomCreatePayload, RoomDetailResponse, RoomResponse } from "./types";
 import { API_ENDPOINTS } from "@/lib/api/api-endpoints";
 
 export const roomApi = {
@@ -8,8 +8,8 @@ export const roomApi = {
   detail: async (id: string) =>
     (await axiosInstance.get<RoomDetailResponse>(API_ENDPOINTS.room.detail(id)))
       .data,
-  create: async () =>
-    (await axiosInstance.post(API_ENDPOINTS.room.create)).data,
+  create: async (payload: RoomCreatePayload) =>
+    (await axiosInstance.post(API_ENDPOINTS.room.create, payload)).data,
   update: async (id: string) =>
     (await axiosInstance.patch(API_ENDPOINTS.room.update(id))).data,
   delete: async (id: string) =>

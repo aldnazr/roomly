@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { LoginInput, loginSchema } from "@/features/auth/scheme";
+import { LoginInput, loginSchema } from "@/features/auth/schema";
 import { Spinner } from "@/components/ui/spinner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -139,7 +139,10 @@ export default function LoginPage() {
                     }
                     {...register("identifier")}
                   />
-                  <FieldError id="identifier-error" errors={[errors.identifier]} />
+                  <FieldError
+                    id="identifier-error"
+                    errors={[errors.identifier]}
+                  />
                 </Field>
 
                 <Field data-invalid={!!errors.password}>
@@ -168,9 +171,7 @@ export default function LoginPage() {
                     className="w-full"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ?
-                      <Spinner />
-                    : <IconDoorEnter />}
+                    {isSubmitting ? <Spinner /> : <IconDoorEnter />}
                     Masuk
                   </Button>
                 </Field>

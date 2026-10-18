@@ -32,10 +32,10 @@ import { toast } from "@/components/ui/toast";
 import { useRoles } from "@/features/roles/use-roles";
 import { UserFormSkeleton } from "@/features/users/components/user-form-skeleton";
 import {
-  UserCreateInput,
+  UserCreatePayload,
   userCreateSchema,
   UserFormValues,
-  UserUpdateInput,
+  UserUpdatePayload,
   userUpdateSchema,
 } from "@/features/users/schema";
 import {
@@ -91,7 +91,7 @@ export default function UserDetailPage() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<UserFormValues, unknown, UserCreateInput | UserUpdateInput>({
+  } = useForm<UserFormValues, unknown, UserCreatePayload | UserUpdatePayload>({
     resolver: zodResolver(isEditing ? userUpdateSchema : userCreateSchema),
   });
 
@@ -100,13 +100,13 @@ export default function UserDetailPage() {
     if (!key || syncedKey.current === key) return;
     syncedKey.current = key;
     reset(
-      isEditing && user ?
-        {
-          username: user.username ?? "",
-          email: user.email ?? "",
-          role: user.role ?? "",
-          password: "",
-        }
+      isEditing && user
+        ? {
+            username: user.username ?? "",
+            email: user.email ?? "",
+            role: user.role ?? "",
+            password: "",
+          }
         : emptyValues,
     );
   }, [isEditing, reset, user, userId]);
@@ -116,9 +116,10 @@ export default function UserDetailPage() {
       label: item.name,
       value: item.slug,
     })) ?? [];
-  const isPending = isSubmitting || createUser.isPending || updateUser.isPending;
+  const isPending =
+    isSubmitting || createUser.isPending || updateUser.isPending;
 
-  async function onSubmit(data: UserCreateInput | UserUpdateInput) {
+  async function onSubmit(data: UserCreatePayload | UserUpdatePayload) {
     if (isEditing) {
       await toast
         .promise(
@@ -203,23 +204,23 @@ export default function UserDetailPage() {
               {isEditing ? "Edit pengguna" : "Tambah pengguna"}
             </h1>
             <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-              {isEditing ?
-                "Perbarui identitas dan tingkat akses pengguna tanpa mengubah alur kerja tim."
-                : "Buat akun baru dan tetapkan akses yang tepat sejak hari pertama."
-              }
+              {isEditing
+                ? "Perbarui identitas dan tingkat akses pengguna tanpa mengubah alur kerja tim."
+                : "Buat akun baru dan tetapkan akses yang tepat sejak hari pertama."}
             </p>
           </div>
 
           <div className="flex items-center gap-3 rounded-3xl bg-muted/60 p-3 pr-5 ring-1 ring-foreground/5">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-card text-lg font-semibold text-primary ring-1 ring-foreground/5">
-              {isEditing ?
+              {isEditing ? (
                 initial
-                : <IconUserPlus
+              ) : (
+                <IconUserPlus
                   className="size-5"
                   stroke={1.5}
                   aria-hidden="true"
                 />
-              }
+              )}
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">
@@ -266,17 +267,23 @@ export default function UserDetailPage() {
                         autoComplete="username"
                         aria-invalid={!!errors.username}
                         aria-describedby={
-                          errors.username ? "username-error" : "username-description"
+                          errors.username
+                            ? "username-error"
+                            : "username-description"
                         }
                         {...register("username")}
                       />
-                      {errors.username ?
-                        <FieldError id="username-error" errors={[errors.username]} />
-                        : <FieldDescription id="username-description">
+                      {errors.username ? (
+                        <FieldError
+                          id="username-error"
+                          errors={[errors.username]}
+                        />
+                      ) : (
+                        <FieldDescription id="username-description">
                           Minimal 3 karakter; gunakan huruf, angka, titik, atau
                           garis bawah.
                         </FieldDescription>
-                      }
+                      )}
                     </Field>
 
                     <Field data-invalid={!!errors.email}>
@@ -299,12 +306,13 @@ export default function UserDetailPage() {
                         }
                         {...register("email")}
                       />
-                      {errors.email ?
+                      {errors.email ? (
                         <FieldError id="email-error" errors={[errors.email]} />
-                        : <FieldDescription id="email-description">
+                      ) : (
+                        <FieldDescription id="email-description">
                           Gunakan alamat email aktif milik pengguna.
                         </FieldDescription>
-                      }
+                      )}
                     </Field>
 
                     <Field data-invalid={!!errors.password}>
@@ -319,27 +327,32 @@ export default function UserDetailPage() {
                       <Input
                         id="password"
                         placeholder={
-                          isEditing ?
-                            "Biarkan kosong jika tidak diubah"
+                          isEditing
+                            ? "Biarkan kosong jika tidak diubah"
                             : "Minimal 8 karakter"
                         }
                         type="password"
                         autoComplete="new-password"
-                        minLength={8}
                         aria-invalid={!!errors.password}
                         aria-describedby={
-                          errors.password ? "password-error" : "password-description"
+                          errors.password
+                            ? "password-error"
+                            : "password-description"
                         }
                         {...register("password")}
                       />
-                      {errors.password ?
-                        <FieldError id="password-error" errors={[errors.password]} />
-                        : <FieldDescription id="password-description">
-                          {isEditing ?
-                            "Isi hanya jika Anda ingin mengganti password."
+                      {errors.password ? (
+                        <FieldError
+                          id="password-error"
+                          errors={[errors.password]}
+                        />
+                      ) : (
+                        <FieldDescription id="password-description">
+                          {isEditing
+                            ? "Isi hanya jika Anda ingin mengganti password."
                             : "Buat password sementara yang aman untuk pengguna."}
                         </FieldDescription>
-                      }
+                      )}
                     </Field>
 
                     <Field data-invalid={!!errors.role}>
@@ -358,7 +371,9 @@ export default function UserDetailPage() {
                           <Select
                             items={roleItems}
                             value={field.value || null}
-                            onValueChange={(value) => field.onChange(value ?? "")}
+                            onValueChange={(value) =>
+                              field.onChange(value ?? "")
+                            }
                             disabled={isRoleLoading || isRoleError}
                           >
                             <SelectTrigger
@@ -373,7 +388,9 @@ export default function UserDetailPage() {
                             >
                               <SelectValue
                                 placeholder={
-                                  isRoleLoading ? "Memuat role..." : "Pilih role"
+                                  isRoleLoading
+                                    ? "Memuat role..."
+                                    : "Pilih role"
                                 }
                               />
                             </SelectTrigger>
@@ -381,7 +398,10 @@ export default function UserDetailPage() {
                               <SelectGroup>
                                 <SelectLabel>Role tersedia</SelectLabel>
                                 {roleItems.map((item) => (
-                                  <SelectItem key={item.value} value={item.value}>
+                                  <SelectItem
+                                    key={item.value}
+                                    value={item.value}
+                                  >
                                     {item.label}
                                   </SelectItem>
                                 ))}
@@ -390,15 +410,15 @@ export default function UserDetailPage() {
                           </Select>
                         )}
                       />
-                      {errors.role ?
+                      {errors.role ? (
                         <FieldError id="role-error" errors={[errors.role]} />
-                        : <FieldDescription id="role-description">
-                          {isRoleError ?
-                            "Role gagal dimuat. Muat ulang halaman untuk mencoba lagi."
-                            : "Role menentukan fitur dan data yang dapat diakses."
-                          }
+                      ) : (
+                        <FieldDescription id="role-description">
+                          {isRoleError
+                            ? "Role gagal dimuat. Muat ulang halaman untuk mencoba lagi."
+                            : "Role menentukan fitur dan data yang dapat diakses."}
                         </FieldDescription>
-                      }
+                      )}
                     </Field>
                   </FieldGroup>
                 </FieldSet>
@@ -419,21 +439,22 @@ export default function UserDetailPage() {
                   disabled={isPending || isRoleLoading || isRoleError}
                   className="w-full transition-[transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] sm:w-auto"
                 >
-                  {isPending ?
+                  {isPending ? (
                     <IconLoader2
                       data-icon="inline-start"
                       className="animate-spin"
                       aria-hidden="true"
                     />
-                    : <IconDeviceFloppy
+                  ) : (
+                    <IconDeviceFloppy
                       data-icon="inline-start"
                       aria-hidden="true"
                     />
-                  }
-                  {isPending ?
-                    "Menyimpan..."
-                    : isEditing ?
-                      "Simpan perubahan"
+                  )}
+                  {isPending
+                    ? "Menyimpan..."
+                    : isEditing
+                      ? "Simpan perubahan"
                       : "Buat pengguna"}
                 </Button>
               </CardFooter>

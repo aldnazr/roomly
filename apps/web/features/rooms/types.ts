@@ -17,11 +17,11 @@ export type RoomDetailResponse = {
   data: Room;
 };
 
-export type RoomPayload = {
+export type RoomCreatePayload = {
   name: string;
   capacity: number;
   base_price: number;
   description?: string;
   amenities?: string[];
-  photos?: any[];
+  photos?: string[];
 };

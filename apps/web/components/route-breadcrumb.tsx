@@ -20,7 +20,7 @@ import React from "react";
 const STATIC_LABELS: Record<string, string> = {
   user: "User",
   role: "Role",
-  create: "Create User",
+  room: "Rooms",
 };
 
 function humanize(segment: string): string {
@@ -35,6 +35,13 @@ export function RouteBreadcrumb() {
   const segments = pathname.split("/").filter(Boolean);
 
   const resolveLabel = (segment: string, prevSegment?: string): string => {
+    if (segment === "create") {
+      if (prevSegment === "room") return "Create Room Type";
+      if (prevSegment === "role") return "Create Role";
+      if (prevSegment === "user") return "Create User";
+      return "Create";
+    }
+
     if (STATIC_LABELS[segment]) return STATIC_LABELS[segment];
 
     if (prevSegment === "role") {

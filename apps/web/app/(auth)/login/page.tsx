@@ -1,6 +1,7 @@
 "use client";
 
-import { IconDoorEnter } from "@tabler/icons-react";
+import { IconDoor, IconDoorEnter } from "@tabler/icons-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -64,7 +65,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/");
+      router.push("/dashboard");
     } catch {
       setError("root", {
         message: "Tidak dapat terhubung ke server. Coba lagi.",
@@ -180,15 +181,16 @@ export default function LoginPage() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2 border-t">
-            <p>Atau login sebagai tamu</p>
+            <p>Untuk tamu tidak perlu akun untuk melihat kamar dan harga.</p>
             <Button
               variant={"secondary"}
               size="lg"
               className="w-full"
-              onClick={() => router.push("/guest")}
+              nativeButton={false}
+              render={<Link href={"/guest"} />}
             >
-              <IconDoorEnter />
-              Guest
+              <IconDoor />
+              Lihat daftar kamar
             </Button>
           </CardFooter>
         </Card>

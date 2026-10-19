@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { requireAuth, requirePermission } from "../auth/middleware";
-import { HttpError } from "../errors";
 import {
   parseCreateRoomTypeBody,
   parseQueryRoomType,
   parseUpdateRoomTypeBody,
 } from "./schema";
+import { parseRoomTypeId } from "./params";
 import {
   createRoomType,
   deleteRoomType,
@@ -17,15 +17,6 @@ import {
 export const roomTypesRouter = Router();
 
 roomTypesRouter.use(requireAuth);
-
-function parseRoomTypeId(param: string | string[] | undefined): number {
-  const value = Array.isArray(param) ? param[0] : param;
-  const id = Number(value);
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new HttpError(400, "Invalid room type ID");
-  }
-  return id;
-}
 
 roomTypesRouter.get("/", requirePermission("rooms.browse"), async (req, res, next) => {
   try {

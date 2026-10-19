@@ -295,6 +295,33 @@ curl -s -X DELETE http://localhost:4000/api/room-types/1 \
 - `404` → room type not found
 - `409` → cannot delete room type because physical rooms or reservations reference it
 
+## Public Room Catalog
+
+Read-only room type catalog for the guest page. No token and no permission check, so the same DTO the staff route returns is served to anonymous visitors. Mounted at `/api/public/room-types` and rate limited per client IP (120 requests per 60 seconds, fixed window, in memory).
+
+### List
+
+`GET /api/public/room-types[?capacity_min=N&capacity_max=N]`
+
+```bash
+curl -s "http://localhost:4000/api/public/room-types?capacity_min=2"
+```
+
+- `200` → `{ "data": [ { "id": 1, "name": "Deluxe", "base_price": 750000, "capacity": 2, "description": "...", "amenities": ["WiFi", "AC"], "photos": ["https://..."], "total_rooms": 5 } ] }`
+- `400` → invalid query parameter
+- `429` → rate limit exceeded, retry after the `Retry-After` header value
+
+### Get
+
+`GET /api/public/room-types/:id`
+
+- `200` → single room type object
+- `400` → invalid room type ID
+- `404` → room type not found
+- `429` → rate limit exceeded
+
+The staff routes under `/api/room-types` stay behind `requireAuth` and `rooms.browse`.
+
 ## Availability
 
 Search for available room types across a requested date range and party size. Requires `rooms.browse` permission.
@@ -318,4 +345,5 @@ Only room types with `capacity >= guests` and `available_rooms > 0` are returned
 ## Notes
 
 - Access tokens cannot be revoked before they expire.
-- Rate limiting / brute-force protection is not implemented yet; add before public deployment.
+- The public room catalog is rate limited per client IP (120 requests per 60 seconds, in memory). The rate limit lives in the API process, so it resets on deploy and does not span multiple instances.
+- Login and the staff routes still have no brute-force protection; add a rate limit or lockout there before public deployment.

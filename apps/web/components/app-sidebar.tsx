@@ -21,7 +21,7 @@ export function AppSidebar() {
   const data = [
     {
       title: "Dashboard",
-      url: "/",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
@@ -52,7 +52,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <NavUser
           logout={async () => {
-            await signOut({ redirectTo: "/login" });
+            await signOut({ redirectTo: "/guest" });
           }}
         />
       </SidebarFooter>

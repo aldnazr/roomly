@@ -794,6 +794,60 @@ describe("room-types API", () => {
 });
 
 
+describe("public room-types API", () => {
+  const publicUrl = (path = "") => `${baseUrl}/api/public/room-types${path}`;
+  const get = (path = "") => fetch(publicUrl(path));
+
+  let publicRoomTypeId: number;
+
+  beforeAll(async () => {
+    publicRoomTypeId = await insertReturningId(
+      "INSERT INTO room_types (name, base_price, capacity, description, amenities, photos) VALUES ('Public Deluxe', 725000, 3, 'Kamar publik untuk tamu', '[\"WiFi\",\"AC\"]', '[]') RETURNING id",
+    );
+  });
+
+  test("lists room types without any Authorization header", async () => {
+    const res = await get();
+    expect(res.status).toBe(200);
+
+    const { data } = (await res.json()) as {
+      data: { id: number; name: string; description: string | null }[];
+    };
+    expect(Array.isArray(data)).toBeTrue();
+    expect(data.some((rt) => rt.id === publicRoomTypeId)).toBeTrue();
+    expect(data.every((rt) => !("password_hash" in rt))).toBeTrue();
+  });
+
+  test("applies the capacity filter on the public catalog", async () => {
+    const res = await get("?capacity_min=3");
+    expect(res.status).toBe(200);
+
+    const { data } = (await res.json()) as { data: { capacity: number }[] };
+    expect(data.every((rt) => rt.capacity >= 3)).toBeTrue();
+  });
+
+  test("returns one room type without any Authorization header", async () => {
+    const res = await get(`/${publicRoomTypeId}`);
+    expect(res.status).toBe(200);
+
+    const { data } = (await res.json()) as {
+      data: { id: number; name: string; amenities: string[] };
+    };
+    expect(data.id).toBe(publicRoomTypeId);
+    expect(data.name).toBe("Public Deluxe");
+    expect(data.amenities).toEqual(["WiFi", "AC"]);
+  });
+
+  test("returns 404 for an unknown id and 400 for a non-numeric id", async () => {
+    expect((await get("/99999")).status).toBe(404);
+    expect((await get("/not-a-number")).status).toBe(400);
+  });
+
+  test("keeps the staff room-types route behind authentication", async () => {
+    expect((await fetch(`${baseUrl}/api/room-types`)).status).toBe(401);
+  });
+});
+
 describe("availability API", () => {
   const availUrl = (qs: string) => `${baseUrl}/api/availability${qs}`;
   const get = (qs: string, token?: string) =>

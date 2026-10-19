@@ -24,4 +24,8 @@ export const API_ENDPOINTS = {
     update: (id: string) => `/api/room-types/${id}`,
     delete: (id: string) => `/api/room-types/${id}`,
   },
+  public: {
+    roomTypes: "/api/public/room-types",
+    roomType: (id: string) => `/api/public/room-types/${id}`,
+  },
 } as const;

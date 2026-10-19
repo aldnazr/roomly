@@ -7,9 +7,9 @@ export type Room = {
   name: string;
   base_price: number;
   capacity: number;
-  description: string;
+  description: string | null;
   amenities: string[];
-  photos: any[];
+  photos: string[];
   total_rooms: number;
 };
 

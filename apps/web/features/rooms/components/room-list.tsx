@@ -22,14 +22,56 @@ const idr = new Intl.NumberFormat("id-ID", {
   maximumFractionDigits: 0,
 });
 
+export type RoomListCopy = {
+  errorTitle: string;
+  errorDescription: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  retryLabel: string;
+  noPhotoLabel: string;
+  capacityLabel: (capacity: number) => string;
+  unitsLabel: (total: number) => string;
+  pricePeriod: string;
+  /**
+   * The transport message is developer speak ("Request failed with status
+   * code 429"). Staff pages keep it, the public guest page hides it and
+   * relies on the description alone.
+   */
+  hideErrorDetail?: boolean;
+};
+
+export const DEFAULT_ROOM_LIST_COPY: RoomListCopy = {
+  errorTitle: "Failed to load rooms",
+  errorDescription: "An unexpected error occurred while fetching rooms.",
+  emptyTitle: "No rooms yet",
+  emptyDescription:
+    "No room records found. Rooms will appear here once added to the system.",
+  retryLabel: "Try again",
+  noPhotoLabel: "No photo",
+  capacityLabel: (capacity) => `Up to ${capacity} guests`,
+  unitsLabel: (total) => `${total} ${total === 1 ? "unit" : "units"}`,
+  pricePeriod: "/ night",
+};
+
 interface RoomListProps {
   rooms?: Room[];
   isError?: boolean;
   error?: Error | null;
   onRetry?: () => void;
+  hrefBase?: string;
+  copy?: Partial<RoomListCopy>;
 }
 
-export function RoomList({ rooms, isError, error, onRetry }: RoomListProps) {
+export function RoomList({
+  rooms,
+  isError,
+  error,
+  onRetry,
+  hrefBase = "/room",
+  copy,
+}: RoomListProps) {
+  const text: RoomListCopy = { ...DEFAULT_ROOM_LIST_COPY, ...copy };
+
   if (isError) {
     return (
       <div
@@ -37,11 +79,10 @@ export function RoomList({ rooms, isError, error, onRetry }: RoomListProps) {
         className="flex flex-col items-center justify-center rounded-3xl border border-destructive/20 bg-destructive/5 p-8 text-center"
       >
         <p className="text-sm font-medium text-destructive">
-          Failed to load rooms
+          {text.errorTitle}
         </p>
         <p className="mt-1 max-w-md text-xs text-muted-foreground">
-          {error?.message ||
-            "An unexpected error occurred while fetching rooms."}
+          {text.hideErrorDetail ? text.errorDescription : error?.message || text.errorDescription}
         </p>
         {onRetry && (
           <Button
@@ -51,7 +92,7 @@ export function RoomList({ rooms, isError, error, onRetry }: RoomListProps) {
             className="mt-4 gap-2"
           >
             <IconRotateClockwise className="size-4" />
-            Try again
+            {text.retryLabel}
           </Button>
         )}
       </div>
@@ -64,10 +105,9 @@ export function RoomList({ rooms, isError, error, onRetry }: RoomListProps) {
         <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
           <IconDoor className="size-6" />
         </div>
-        <h3 className="font-heading text-base font-medium">No rooms yet</h3>
+        <h3 className="font-heading text-base font-medium">{text.emptyTitle}</h3>
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-          No room records found. Rooms will appear here once added to the
-          system.
+          {text.emptyDescription}
         </p>
       </div>
     );
@@ -80,7 +120,7 @@ export function RoomList({ rooms, isError, error, onRetry }: RoomListProps) {
         return (
           <Link
             key={room.id}
-            href={`/room/${room.id}`}
+            href={`${hrefBase}/${room.id}`}
             className="group/room block rounded-4xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Card className="h-full overflow-hidden border border-border/60 bg-card p-0 shadow-xs transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/room:border-border group-hover/room:shadow-md">
@@ -95,11 +135,11 @@ export function RoomList({ rooms, isError, error, onRetry }: RoomListProps) {
                   />
                 : <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground/70">
                     <IconPhotoOff className="size-6" />
-                    <span className="text-xs">No photo</span>
+                    <span className="text-xs">{text.noPhotoLabel}</span>
                   </div>
                 }
                 <div className="absolute top-3 right-3 rounded-full bg-background/85 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur-md shadow-xs">
-                  {room.total_rooms} {room.total_rooms === 1 ? "unit" : "units"}
+                  {text.unitsLabel(room.total_rooms)}
                 </div>
               </div>
 
@@ -136,7 +176,7 @@ export function RoomList({ rooms, isError, error, onRetry }: RoomListProps) {
                 <div className="flex items-center justify-between border-t border-border/50 pt-3 text-xs">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <IconUsers className="size-4 shrink-0" />
-                    <span>Up to {room.capacity} guests</span>
+                    <span>{text.capacityLabel(room.capacity)}</span>
                   </div>
                   <div className="text-right">
                     <span className="font-heading text-sm font-semibold text-foreground">
@@ -144,7 +184,7 @@ export function RoomList({ rooms, isError, error, onRetry }: RoomListProps) {
                     </span>
                     <span className="text-[10px] text-muted-foreground">
                       {" "}
-                      / night
+                      {text.pricePeriod}
                     </span>
                   </div>
                 </div>

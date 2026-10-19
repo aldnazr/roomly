@@ -7,6 +7,7 @@ import { rolesRouter } from "./roles/routes";
 import { permissionsRouter } from "./permissions/routes";
 import { usersRouter } from "./users/routes";
 import { roomTypesRouter } from "./room-types/routes";
+import { publicRoomTypesRouter } from "./room-types/public-routes";
 import { availabilityRouter } from "./availability/routes";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
@@ -27,6 +28,10 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 export function createApp() {
   const app = express();
 
+  // Vercel fronts the API with one proxy hop, so the client IP is the last
+  // entry of X-Forwarded-For. Rate limiting keys off req.ip and needs this.
+  app.set("trust proxy", 1);
+
   app.use(
     cors({
       // Wildcard `*` is illegal with credentialed requests; echo an explicit origin.
@@ -41,6 +46,7 @@ export function createApp() {
   app.use("/api/roles", rolesRouter);
   app.use("/api/permissions", permissionsRouter);
   app.use("/api/users", usersRouter);
+  app.use("/api/public/room-types", publicRoomTypesRouter);
   app.use("/api/room-types", roomTypesRouter);
   app.use("/api/availability", availabilityRouter);
 

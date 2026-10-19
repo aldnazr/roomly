@@ -57,6 +57,19 @@ Sistem ini menerapkan Role-Based Access Control (RBAC) ketat di level API dan UI
 2. **Manajemen User & Role:** CRUD Pengguna, Role, dan Hak Akses (Permissions).
 3. **Manajemen Room Type & Kamar:** Pengelolaan jenis kamar, kapasitas, harga dasar, serta fasilitas.
 4. **Availability Engine:** Pencarian ketersediaan kamar berdasarkan tanggal check-in/check-out dan pencegahan overbooking.
+5. **Katalog Publik:** Halaman tamu menampilkan daftar tipe kamar tanpa login, dilayani endpoint publik yang terpisah dari route staff.
+
+---
+
+## 🧭 Halaman Utama
+
+| URL          | Akses  | Isi                                         |
+| ------------ | ------ | ------------------------------------------- |
+| `/guest`     | Publik | Katalog kamar untuk calon tamu              |
+| `/dashboard` | Staff  | Dashboard operasional hotel                 |
+| `/login`     | Publik | Halaman masuk                               |
+
+URL `/` bersifat session-aware: pengunjung tanpa sesi diarahkan ke `/guest`, pengguna yang sudah masuk diarahkan ke `/dashboard`.
 
 ---
 
@@ -144,6 +157,7 @@ Aplikasi akan berjalan pada:
 | `GET` / `POST` | `/api/roles`        | Pengelolaan role & hak akses           |
 | `GET`          | `/api/permissions`  | Daftar permission sistem               |
 | `GET` / `POST` | `/api/room-types`   | Pengelolaan jenis/tipe kamar           |
+| `GET`          | `/api/public/room-types` | Katalog kamar publik (tanpa login) |
 | `GET`          | `/api/availability` | Cek ketersediaan kamar                 |
 
 ---

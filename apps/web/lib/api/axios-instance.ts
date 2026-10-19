@@ -35,10 +35,16 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     const isLoginAttempt = error.config?.url === API_ENDPOINTS.auth.login;
+    // The guest catalog is anonymous, so a 401 there says nothing about an
+    // expired session. Only staff calls may raise the dialog.
+    const isPublicRequest = error.config?.url?.startsWith(
+      API_ENDPOINTS.public.roomTypes,
+    );
     if (
       typeof window !== "undefined" &&
       error.response?.status === 401 &&
-      !isLoginAttempt
+      !isLoginAttempt &&
+      !isPublicRequest
     ) {
       useSessionStore.getState().showSessionExpired();
     }

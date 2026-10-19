@@ -1,22 +1,31 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/auth";
 
+// Paths an anonymous visitor may reach. "/" is public because app/page.tsx
+// decides where to send the visitor based on the session.
+const PUBLIC_PATHS = ["/", "/login", "/guest"];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
+}
+
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthPage = pathname.startsWith("/login");
-  const isGuestArea = pathname === "/guest" || pathname.startsWith("/guest/");
   const session = await auth();
-  const role = session?.user.role;
 
   if (!session) {
-    return isAuthPage || isGuestArea ?
+    return isPublicPath(pathname) ?
         NextResponse.next()
       : NextResponse.redirect(new URL("/login", request.url));
   }
 
-  return isAuthPage ?
-      NextResponse.redirect(new URL("/", request.url))
-    : NextResponse.next();
+  if (pathname === "/login" || pathname.startsWith("/login/")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

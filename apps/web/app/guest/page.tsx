@@ -1,30 +1,52 @@
 "use client";
 
-import { ModeToggle } from "@/components/mode-toggle";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { RoomList } from "@/features/rooms/components/room-list";
+import type { RoomListCopy } from "@/features/rooms/components/room-list";
+import { RoomListSkeleton } from "@/features/rooms/components/room-list-skeleton";
+import { usePublicRooms } from "@/features/rooms/use-public-rooms";
+
+const GUEST_ROOM_LIST_COPY: RoomListCopy = {
+  errorTitle: "Gagal memuat daftar kamar",
+  errorDescription:
+    "Server tidak dapat dihubungi. Periksa koneksi, lalu coba lagi.",
+  emptyTitle: "Belum ada kamar yang dipublikasikan",
+  emptyDescription:
+    "Daftar tipe kamar akan tampil di sini setelah hotel menambahkannya ke sistem.",
+  retryLabel: "Coba lagi",
+  noPhotoLabel: "Belum ada foto",
+  capacityLabel: (capacity) => `Untuk ${capacity} tamu`,
+  unitsLabel: (total) => `${total} unit`,
+  pricePeriod: "/ malam",
+  hideErrorDetail: true,
+};
 
 export default function GuestPage() {
-  const router = useRouter();
+  const { data, isLoading, isError, error, refetch } = usePublicRooms();
+  const rooms = data?.data;
+
   return (
-    <>
-      <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center justify-between border-b border-border/70 bg-background/60 px-4 backdrop-blur-sm sm:px-6">
-        <div className="flex items-center gap-2">
-          <h1>Guest</h1>
-        </div>
-        <div className="flex gap-2">
-          <ModeToggle />
-          <Button onClick={() => router.push("/login")}>Login</Button>
-        </div>
-      </header>
-      <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          Area Tamu
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          Kamar yang bisa Anda pesan
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Halaman tamu — riwayat booking akan tampil di sini.
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          Harga dasar per malam, kapasitas, dan fasilitas setiap tipe kamar di
+          Roomly Hotel &amp; Stays.
         </p>
-      </main>
-    </>
+      </div>
+
+      {isLoading ?
+        <RoomListSkeleton />
+        : <RoomList
+          rooms={rooms}
+          isError={isError}
+          error={error}
+          onRetry={() => refetch()}
+          hrefBase="/guest/room"
+          copy={GUEST_ROOM_LIST_COPY}
+        />
+      }
+    </div>
   );
 }

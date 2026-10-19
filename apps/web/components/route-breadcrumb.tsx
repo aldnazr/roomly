@@ -32,7 +32,10 @@ export function RouteBreadcrumb() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
 
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = pathname
+    .split("/")
+    .filter(Boolean)
+    .filter((segment) => segment !== "dashboard");
 
   const resolveLabel = (segment: string, prevSegment?: string): string => {
     if (segment === "create") {
@@ -65,7 +68,7 @@ export function RouteBreadcrumb() {
 
   const items = [
     {
-      href: "/",
+      href: "/dashboard",
       label: "Dashboard",
       isLast: segments.length === 0,
     },

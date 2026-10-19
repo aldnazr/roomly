@@ -102,7 +102,10 @@ export default function RoomDetailPage() {
           Back to rooms
         </Button>
         {hasPermission && (
-          <Button size={"sm"}>
+          <Button
+            size={"sm"}
+            onClick={() => router.push(`/room/${roomId}/edit`)}
+          >
             <IconEdit /> <span>Update</span>
           </Button>
         )}

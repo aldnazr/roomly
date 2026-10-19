@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,7 +29,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { RoomCreateInput, roomCreateSchema } from "@/features/rooms/schema";
 import { RoomCreatePayload } from "@/features/rooms/types";
-import { useCreateRoom } from "@/features/rooms/use-rooms";
+import {
+  useCreateRoom,
+  useUpdateRoom,
+  useRoomDetail,
+} from "@/features/rooms/use-rooms";
 import { Textarea } from "@/components/ui/textarea";
 
 const PRESET_AMENITIES = [
@@ -44,22 +48,36 @@ const PRESET_AMENITIES = [
   "Hot Shower",
 ];
 
-export default function RoomCreate() {
-  const router = Router();
+export default function RoomCreatePage() {
+  return (
+    <Suspense fallback={null}>
+      <RoomCreate />
+    </Suspense>
+  );
+}
+
+export function RoomCreate({ roomId }: { roomId?: string } = {}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = roomId || searchParams.get("id") || searchParams.get("roomId");
+  const isEdit = !!editId;
   const createRoom = useCreateRoom();
+  const updateRoom = useUpdateRoom(editId || "");
+  const { data: roomData, isLoading: roomLoading } = useRoomDetail(
+    editId || "",
+  );
+
+  const filledRef = useRef<string | null>(null);
 
   const [customAmenity, setCustomAmenity] = useState("");
   const [photoUrlInput, setPhotoUrlInput] = useState("");
   const [photoInputError, setPhotoInputError] = useState<string | null>(null);
 
-  function Router() {
-    return useRouter();
-  }
-
   const {
     register,
     handleSubmit,
     setValue,
+    reset,
     control,
     formState: { errors, isSubmitting },
   } = useForm<RoomCreateInput>({
@@ -77,6 +95,23 @@ export default function RoomCreate() {
   const watchAmenities = useWatch({ control, name: "amenities" }) || [];
   const watchPhotos = useWatch({ control, name: "photos" }) || [];
   const watchBasePrice = useWatch({ control, name: "basePrice" });
+
+  useEffect(() => {
+    const room = roomData?.data;
+    if (!room || !editId) return;
+    if (filledRef.current === editId) return;
+    filledRef.current = editId;
+    reset({
+      roomName: room.name ?? "",
+      capacity: room.capacity ?? 2,
+      basePrice: room.base_price ?? 0,
+      description: room.description ?? "",
+      amenities: room.amenities ?? [],
+      photos: (room.photos ?? [])
+        .map((p: any) => (typeof p === "string" ? p : p?.url))
+        .filter((u: any): u is string => Boolean(u)),
+    });
+  }, [roomData, editId, reset]);
 
   const formattedPrice =
     typeof watchBasePrice === "number" &&
@@ -161,11 +196,19 @@ export default function RoomCreate() {
     };
 
     try {
-      await toast.promise(createRoom.mutateAsync(payload), {
-        loading: "Creating room type...",
-        success: `${data.roomName} created successfully.`,
-        error: "Could not create room type.",
-      });
+      if (isEdit && editId) {
+        await toast.promise(updateRoom.mutateAsync(payload), {
+          loading: "Updating room type...",
+          success: `${data.roomName} updated successfully.`,
+          error: "Could not update room type.",
+        });
+      } else {
+        await toast.promise(createRoom.mutateAsync(payload), {
+          loading: "Creating room type...",
+          success: `${data.roomName} created successfully.`,
+          error: "Could not create room type.",
+        });
+      }
       router.push("/room");
     } catch {
       // Error handled by toast.promise
@@ -176,11 +219,12 @@ export default function RoomCreate() {
     <div className="w-full py-6 sm:py-8 px-4 sm:px-6">
       <div className="mb-6 sm:mb-8 max-w-3xl mx-auto">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-          Create Room
+          {isEdit ? "Update Room Type" : "Create Room"}
         </h1>
         <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
-          Define a new category of accommodation including base pricing,
-          capacity, amenities, and photo gallery.
+          {isEdit
+            ? "Update this room type's details, pricing, amenities, and photos."
+            : "Define a new category of accommodation including base pricing, capacity, amenities, and photo gallery."}
         </p>
       </div>
 
@@ -507,14 +551,21 @@ export default function RoomCreate() {
             </Button>
             <Button
               type="submit"
-              disabled={createRoom.isPending || isSubmitting}
+              disabled={
+                createRoom.isPending ||
+                updateRoom.isPending ||
+                isSubmitting ||
+                (isEdit && roomLoading)
+              }
               className="px-5 font-semibold"
             >
-              {createRoom.isPending || isSubmitting ? (
+              {createRoom.isPending || updateRoom.isPending || isSubmitting ? (
                 <>
                   <Spinner className="size-4 mr-2" />
-                  Creating Room Type...
+                  {isEdit ? "Updating Room Type..." : "Creating Room Type..."}
                 </>
+              ) : isEdit ? (
+                "Update Room Type"
               ) : (
                 "Create Room Type"
               )}

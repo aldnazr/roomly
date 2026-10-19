@@ -24,6 +24,16 @@ export function useCreateRoom() {
   });
 }
 
+export function useUpdateRoom(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: RoomCreatePayload) => roomApi.update(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: roomKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: roomKeys.list() });
+    },
+  });
+}
 export function useRoomDetail(id: string) {
   return useQuery({
     queryKey: roomKeys.detail(id),

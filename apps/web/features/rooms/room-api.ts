@@ -10,8 +10,8 @@ export const roomApi = {
       .data,
   create: async (payload: RoomCreatePayload) =>
     (await axiosInstance.post(API_ENDPOINTS.room.create, payload)).data,
-  update: async (id: string) =>
-    (await axiosInstance.patch(API_ENDPOINTS.room.update(id))).data,
+  update: async (id: string, payload: RoomCreatePayload) =>
+    (await axiosInstance.patch(API_ENDPOINTS.room.update(id), payload)).data,
   delete: async (id: string) =>
     (await axiosInstance.delete(API_ENDPOINTS.room.delete(id))).data,
 };

@@ -27,15 +27,15 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
-import { RoomCreateInput, roomCreateSchema } from "@/features/rooms/schema";
-import { RoomCreatePayload } from "@/features/rooms/types";
-import { RoomNotFound } from "@/features/rooms/components/room-detail";
-import { isRoomId } from "@/features/rooms/room-id";
+import { RoomCreateInput, roomCreateSchema } from "@/features/room/schema";
+import { RoomCreatePayload } from "@/features/room/types";
+import { RoomNotFound } from "@/features/room/components/room-detail";
+import { isRoomId } from "@/features/room/room-id";
 import {
   useCreateRoom,
   useUpdateRoom,
   useRoomDetail,
-} from "@/features/rooms/use-rooms";
+} from "@/features/room/use-room";
 import { Textarea } from "@/components/ui/textarea";
 
 const PRESET_AMENITIES = [

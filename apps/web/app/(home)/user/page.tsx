@@ -11,10 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TableSkeleton } from "@/features/users/components/table-skeleton";
-import { TableUser } from "@/features/users/components/table-user";
-import { UserError } from "@/features/users/components/user-error";
-import { useUser } from "@/features/users/use-users";
+import { TableSkeleton } from "@/features/user/components/table-skeleton";
+import { TableUser } from "@/features/user/components/table-user";
+import { UserError } from "@/features/user/components/user-error";
+import { useUser } from "@/features/user/use-users";
 import {
   IconShieldLock,
   IconUserPlus,

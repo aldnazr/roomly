@@ -1,9 +1,9 @@
 "use client";
 
-import { RoomList } from "@/features/rooms/components/room-list";
-import type { RoomListCopy } from "@/features/rooms/components/room-list";
-import { RoomListSkeleton } from "@/features/rooms/components/room-list-skeleton";
-import { usePublicRooms } from "@/features/rooms/use-public-rooms";
+import { RoomList } from "@/features/room/components/room-list";
+import type { RoomListCopy } from "@/features/room/components/room-list";
+import { RoomListSkeleton } from "@/features/room/components/room-list-skeleton";
+import { usePublicRooms } from "@/features/room/use-public-room";
 
 const GUEST_ROOM_LIST_COPY: RoomListCopy = {
   errorTitle: "Gagal memuat daftar kamar",
@@ -36,9 +36,10 @@ export default function GuestPage() {
         </p>
       </div>
 
-      {isLoading ?
+      {isLoading ? (
         <RoomListSkeleton />
-        : <RoomList
+      ) : (
+        <RoomList
           rooms={rooms}
           isError={isError}
           error={error}
@@ -46,7 +47,7 @@ export default function GuestPage() {
           hrefBase="/guest/room"
           copy={GUEST_ROOM_LIST_COPY}
         />
-      }
+      )}
     </div>
   );
 }

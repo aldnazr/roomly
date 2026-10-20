@@ -35,6 +35,7 @@ export function GuestHeader() {
         ) : (
           <Button
             nativeButton={false}
+            variant={"default"}
             render={<Link href={"/login"} />}
             className="h-11 px-4 sm:h-9 sm:px-3"
           >

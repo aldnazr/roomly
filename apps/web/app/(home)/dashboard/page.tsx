@@ -17,8 +17,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRoles } from "@/features/roles/use-roles";
-import { usePermission } from "@/features/permissions/use-permissions";
+import { useRole } from "@/features/role/use-role";
+import { usePermission } from "@/features/permission/use-permission";
 
 export default function Page() {
   const { data: session } = useSession();
@@ -27,7 +27,7 @@ export default function Page() {
     isLoading: rLoading,
     isError: rErr,
     refetch: refetchRoles,
-  } = useRoles();
+  } = useRole();
   const {
     data: permsData,
     isLoading: pLoading,

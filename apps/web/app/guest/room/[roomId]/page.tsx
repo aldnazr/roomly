@@ -9,10 +9,10 @@ import {
   RoomDetailError,
   RoomNotFound,
   type RoomDetailCopy,
-} from "@/features/rooms/components/room-detail";
-import { RoomDetailSkeleton } from "@/features/rooms/components/room-detail-skeleton";
-import { isRoomId } from "@/features/rooms/room-id";
-import { usePublicRoom } from "@/features/rooms/use-public-rooms";
+} from "@/features/room/components/room-detail";
+import { RoomDetailSkeleton } from "@/features/room/components/room-detail-skeleton";
+import { isRoomId } from "@/features/room/room-id";
+import { usePublicRoom } from "@/features/room/use-public-room";
 
 const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
   aboutTitle: "Tentang kamar ini",

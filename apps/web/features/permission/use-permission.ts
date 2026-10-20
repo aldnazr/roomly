@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { permissionApi } from "./permission-api";
 import { SetPermissionPayload } from "./types";
-import { roleKeys } from "../roles/use-roles";
+import { roleKeys } from "../role/use-role";
 
 export const permissionKeys = {
   all: ["permission"] as const,

@@ -1,9 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { RoomList } from "@/features/rooms/components/room-list";
-import { RoomListSkeleton } from "@/features/rooms/components/room-list-skeleton";
-import { useRoom } from "@/features/rooms/use-rooms";
+import { RoomList } from "@/features/room/components/room-list";
+import { RoomListSkeleton } from "@/features/room/components/room-list-skeleton";
+import { useRoom } from "@/features/room/use-room";
 import Link from "next/link";
 
 export default function RoomPage() {
@@ -21,18 +21,25 @@ export default function RoomPage() {
             Browse and manage room inventory, capacity, and nightly rates.
           </p>
         </div>
-        <Button size={"lg"} nativeButton={false} render={<Link href={'/room/create'} />}>Create Room</Button>
+        <Button
+          size={"lg"}
+          nativeButton={false}
+          render={<Link href={"/room/create"} />}
+        >
+          Create Room
+        </Button>
       </div>
 
-      {isLoading ?
+      {isLoading ? (
         <RoomListSkeleton />
-        : <RoomList
+      ) : (
+        <RoomList
           rooms={rooms}
           isError={isError}
           error={error}
           onRetry={() => refetch()}
         />
-      }
+      )}
     </div>
   );
 }

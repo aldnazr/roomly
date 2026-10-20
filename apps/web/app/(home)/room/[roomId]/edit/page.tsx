@@ -2,8 +2,8 @@
 
 import { Suspense } from "react";
 import { useParams } from "next/navigation";
-import { RoomNotFound } from "@/features/rooms/components/room-detail";
-import { isRoomId } from "@/features/rooms/room-id";
+import { RoomNotFound } from "@/features/room/components/room-detail";
+import { isRoomId } from "@/features/room/room-id";
 import { RoomCreate } from "../../create/page";
 
 export default function RoomEditPage() {

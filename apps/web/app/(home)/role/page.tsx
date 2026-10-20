@@ -1,16 +1,16 @@
 "use client";
 
 import { PermissionGuard } from "@/components/permission-guard";
-import { RoleError } from "@/features/roles/components/role-error";
-import { RoleLoading } from "@/features/roles/components/role-loading";
-import { RoleSuccess } from "@/features/roles/components/role-success";
-import { useRoles } from "@/features/roles/use-roles";
+import { RoleError } from "@/features/role/components/role-error";
+import { RoleLoading } from "@/features/role/components/role-loading";
+import { RoleSuccess } from "@/features/role/components/role-success";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import { useMemo } from "react";
+import { useRole } from "@/features/role/use-role";
 
 export default function RolePage() {
-  const { isLoading, isError, data, refetch } = useRoles();
+  const { isLoading, isError, data, refetch } = useRole();
   const roles = data?.data ?? [];
   const permissionCount = roles.map((role) => role.permissions).length;
 

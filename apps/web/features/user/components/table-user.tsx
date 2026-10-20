@@ -16,8 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserResponse } from "@/features/users/types";
-import { useUserDelete } from "@/features/users/use-users";
+import { UserResponse } from "@/features/user/types";
+import { useUserDelete } from "@/features/user/use-users";
 import {
   IconDots,
   IconPencil,

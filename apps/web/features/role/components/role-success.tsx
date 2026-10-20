@@ -14,7 +14,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import { Role } from "@/features/roles/types";
+import { Role } from "@/features/role/types";
 import {
   IconArrowUpRight,
   IconBriefcase,
@@ -68,11 +68,7 @@ export function RoleSuccess({ roles }: { roles: Role[] }) {
                 variant="icon"
                 className="size-11 rounded-full transition-none duration-50 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/item:rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10"
               >
-                <RoleIcon
-                  className="size-5"
-                  stroke={1.5}
-                  aria-hidden="true"
-                />
+                <RoleIcon className="size-5" stroke={1.5} aria-hidden="true" />
               </ItemMedia>
               <ItemContent className="min-w-0 gap-2">
                 <div className="flex flex-wrap items-center gap-2">
@@ -97,10 +93,7 @@ export function RoleSuccess({ roles }: { roles: Role[] }) {
               </ItemContent>
               <ItemActions className="self-center">
                 <span className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground transition-[transform,color,background-color,border-radius] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/item:text-background group-hover/item:bg-primary">
-                  <IconArrowUpRight
-                    className="size-4"
-                    aria-hidden="true"
-                  />
+                  <IconArrowUpRight className="size-4" aria-hidden="true" />
                 </span>
               </ItemActions>
             </Item>

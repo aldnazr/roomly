@@ -29,20 +29,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
-import { useRoles } from "@/features/roles/use-roles";
-import { UserFormSkeleton } from "@/features/users/components/user-form-skeleton";
+import { UserFormSkeleton } from "@/features/user/components/user-form-skeleton";
 import {
   UserCreatePayload,
   userCreateSchema,
   UserFormValues,
   UserUpdatePayload,
   userUpdateSchema,
-} from "@/features/users/schema";
+} from "@/features/user/schema";
 import {
   useUserCreate,
   useUserDetail,
   useUserUpdate,
-} from "@/features/users/use-users";
+} from "@/features/user/use-users";
 import {
   IconArrowLeft,
   IconAt,
@@ -59,6 +58,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRole } from "@/features/role/use-role";
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -78,7 +78,7 @@ export default function UserDetailPage() {
     data: listRole,
     isLoading: isRoleLoading,
     isError: isRoleError,
-  } = useRoles();
+  } = useRole();
   const emptyValues: UserFormValues = {
     username: "",
     email: "",

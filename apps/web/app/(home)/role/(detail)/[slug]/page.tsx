@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
-import { Permission } from "@/features/permissions/types";
-import { useSetPermission } from "@/features/permissions/use-permissions";
-import { useRoleDetail } from "@/features/roles/use-roles";
+import { Permission } from "@/features/permission/types";
+import { useSetPermission } from "@/features/permission/use-permission";
+import { useRoleDetail } from "@/features/role/use-role";
 import { capitalize, cn } from "@/lib/utils";
 import {
   IconArrowLeft,
@@ -145,9 +145,9 @@ export default function RoleDetailPage() {
         <CardHeader>
           <CardTitle>Permission belum dapat dimuat</CardTitle>
           <CardDescription>
-            {error instanceof Error ?
-              error.message
-            : "Periksa koneksi server, lalu coba kembali."}
+            {error instanceof Error
+              ? error.message
+              : "Periksa koneksi server, lalu coba kembali."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -181,9 +181,9 @@ export default function RoleDetailPage() {
 
   const totalPermissions = permissions?.data.length ?? 0;
   const selectedPercentage =
-    totalPermissions > 0 ?
-      Math.round((checked.size / totalPermissions) * 100)
-    : 0;
+    totalPermissions > 0
+      ? Math.round((checked.size / totalPermissions) * 100)
+      : 0;
 
   return (
     <div className={cn("flex flex-col gap-6", hasFormChange && "pb-28")}>
@@ -260,7 +260,7 @@ export default function RoleDetailPage() {
         )}
       </div>
 
-      {groups.length === 0 ?
+      {groups.length === 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>Belum ada permission</CardTitle>
@@ -269,7 +269,8 @@ export default function RoleDetailPage() {
             </CardDescription>
           </CardHeader>
         </Card>
-      : <div className="grid items-start gap-4 md:grid-cols-2">
+      ) : (
+        <div className="grid items-start gap-4 md:grid-cols-2">
           {groups.map((group, index) => {
             const selectedInGroup = group.items.filter((item) =>
               checked.has(item.slug),
@@ -355,7 +356,7 @@ export default function RoleDetailPage() {
             );
           })}
         </div>
-      }
+      )}
 
       {hasFormChange && (
         <div className="fixed inset-x-0 bottom-0 z-20 p-3 sm:p-4">
@@ -387,17 +388,18 @@ export default function RoleDetailPage() {
                   Batal
                 </Button>
                 <Button size="sm" onClick={save} disabled={isPending}>
-                  {isPending ?
+                  {isPending ? (
                     <IconLoader2
                       data-icon="inline-start"
                       className="animate-spin"
                       aria-hidden="true"
                     />
-                  : <IconDeviceFloppy
+                  ) : (
+                    <IconDeviceFloppy
                       data-icon="inline-start"
                       aria-hidden="true"
                     />
-                  }
+                  )}
                   {isPending ? "Menyimpan..." : "Simpan akses"}
                 </Button>
               </div>

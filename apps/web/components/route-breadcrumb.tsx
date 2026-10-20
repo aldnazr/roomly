@@ -8,10 +8,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { roleKeys } from "@/features/roles/use-roles";
-import { RoleResponse } from "@/features/roles/types";
-import { userKeys } from "@/features/users/use-users";
-import { UserResponse } from "@/features/users/types";
+import { roleKeys } from "@/features/role/use-role";
+import { RoleResponse } from "@/features/role/types";
+import { userKeys } from "@/features/user/use-users";
+import { UserResponse } from "@/features/user/types";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -86,12 +86,13 @@ export function RouteBreadcrumb() {
           <React.Fragment key={item.href}>
             {idx > 0 && <BreadcrumbSeparator />}
             <BreadcrumbItem>
-              {item.isLast ?
+              {item.isLast ? (
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
-              : <BreadcrumbLink render={<Link href={item.href} />}>
+              ) : (
+                <BreadcrumbLink render={<Link href={item.href} />}>
                   {item.label}
                 </BreadcrumbLink>
-              }
+              )}
             </BreadcrumbItem>
           </React.Fragment>
         ))}

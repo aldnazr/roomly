@@ -1,14 +1,14 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { roleApi } from "./role-api";
-import { permissionKeys } from "../permissions/use-permissions";
-import { permissionApi } from "../permissions/permission-api";
+import { permissionKeys } from "../permission/use-permission";
+import { permissionApi } from "../permission/permission-api";
 
 export const roleKeys = {
   all: ["roles"] as const,
   list: () => [...roleKeys.all, "list"] as const,
 };
 
-export function useRoles() {
+export function useRole() {
   return useQuery({
     queryKey: roleKeys.list(),
     queryFn: roleApi.list,

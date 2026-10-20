@@ -6,10 +6,10 @@ import {
   RoomDetail,
   RoomDetailError,
   RoomNotFound,
-} from "@/features/rooms/components/room-detail";
-import { RoomDetailSkeleton } from "@/features/rooms/components/room-detail-skeleton";
-import { isRoomId } from "@/features/rooms/room-id";
-import { useRoomDetail } from "@/features/rooms/use-rooms";
+} from "@/features/room/components/room-detail";
+import { RoomDetailSkeleton } from "@/features/room/components/room-detail-skeleton";
+import { isRoomId } from "@/features/room/room-id";
+import { useRoomDetail } from "@/features/room/use-room";
 import { IconArrowLeft, IconEdit } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
 

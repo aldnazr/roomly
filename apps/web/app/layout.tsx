@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/toast";
 import { SessionExpiredDialog } from "@/components/session-expired-dialog";
+import { SessionSyncProvider } from "@/components/providers/session-sync-provider";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 {children}
                 <Toaster />
                 <SessionExpiredDialog />
+                <SessionSyncProvider />
               </SessionProvider>
             </TooltipProvider>
           </ThemeProvider>

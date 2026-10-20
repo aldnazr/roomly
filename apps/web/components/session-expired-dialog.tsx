@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSessionStore } from "@/lib/store/session-store";
+import { AUTH_EVENT, broadcastAuthEvent } from "@/lib/auth/auth-channel";
 
 export function SessionExpiredDialog() {
   const { open } = useSessionStore();
@@ -37,7 +38,12 @@ export function SessionExpiredDialog() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={() => signOut({ redirectTo: "/login" })}>
+          <AlertDialogAction
+            onClick={() => {
+              broadcastAuthEvent(AUTH_EVENT.LOGOUT);
+              signOut({ redirectTo: "/login" });
+            }}
+          >
             Masuk kembali
           </AlertDialogAction>
         </AlertDialogFooter>

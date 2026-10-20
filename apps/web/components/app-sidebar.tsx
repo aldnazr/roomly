@@ -16,6 +16,7 @@ import {
 } from "@tabler/icons-react";
 import { NavMain } from "./nav-main";
 import { RoomlyHeader } from "./roomly-header";
+import { AUTH_EVENT, broadcastAuthEvent } from "@/lib/auth/auth-channel";
 
 export function AppSidebar() {
   const data = [
@@ -52,6 +53,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <NavUser
           logout={async () => {
+            broadcastAuthEvent(AUTH_EVENT.LOGOUT);
             await signOut({ redirectTo: "/guest" });
           }}
         />

@@ -26,7 +26,7 @@ export type AvailabilityResponseDto = {
 };
 
 type DbRoomTypeRow = {
-  id: number;
+  id: string;
   name: string;
   base_price: number;
   capacity: number;
@@ -38,7 +38,7 @@ type DbRoomTypeRow = {
 
 type DbReservationRow = {
   id: number;
-  room_id: number | null;
+  room_id: string | null;
   check_in: string;
   check_out: string;
 };
@@ -83,14 +83,14 @@ export async function searchAvailability(
     LEFT JOIN rooms r ON r.room_type_id = rt.id
     WHERE rt.capacity >= ?
     GROUP BY rt.id
-    ORDER BY rt.base_price ASC, rt.id ASC`,
+    ORDER BY rt.base_price ASC, rt.name ASC`,
     [query.guests],
   );
 
   const results: AvailableRoomTypeResult[] = [];
 
   for (const rt of roomTypes) {
-    const operableRooms = await queryAll<{ id: number }>(
+    const operableRooms = await queryAll<{ id: string }>(
       "SELECT id FROM rooms WHERE room_type_id = ? AND status <> 'maintenance'",
       [rt.id],
     );
@@ -119,7 +119,7 @@ export async function searchAvailability(
         (r) => r.check_in <= date && r.check_out > date,
       );
 
-      const assignedOperable = new Set<number>();
+      const assignedOperable = new Set<string>();
       let unassignedCount = 0;
 
       for (const res of activeForDate) {

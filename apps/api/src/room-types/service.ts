@@ -1,5 +1,6 @@
 import { db, query as queryAll, queryOne } from "../db";
 import { HttpError } from "../errors";
+import { newId } from "../ids";
 import type {
   CreateRoomTypeInput,
   QueryRoomTypeInput,
@@ -7,7 +8,7 @@ import type {
 } from "./schema";
 
 export type RoomTypeDto = {
-  id: number;
+  id: string;
   name: string;
   base_price: number;
   capacity: number;
@@ -18,7 +19,7 @@ export type RoomTypeDto = {
 };
 
 type DbRoomTypeRow = {
-  id: number;
+  id: string;
   name: string;
   base_price: number;
   capacity: number;
@@ -41,8 +42,8 @@ function mapRow(row: DbRoomTypeRow): RoomTypeDto {
   };
 }
 
-async function checkNameConflict(name: string, excludeId?: number): Promise<void> {
-  const existing = await queryOne<{ id: number }>(
+async function checkNameConflict(name: string, excludeId?: string): Promise<void> {
+  const existing = await queryOne<{ id: string }>(
     "SELECT id FROM room_types WHERE name = ? COLLATE NOCASE",
     [name],
   );
@@ -80,14 +81,14 @@ export async function listRoomTypes(query?: QueryRoomTypeInput): Promise<RoomTyp
     LEFT JOIN rooms r ON r.room_type_id = rt.id
     ${whereClause}
     GROUP BY rt.id
-    ORDER BY rt.id ASC`,
+    ORDER BY rt.name COLLATE NOCASE ASC`,
     params,
   );
 
   return rows.map(mapRow);
 }
 
-export async function getRoomType(id: number): Promise<RoomTypeDto> {
+export async function getRoomType(id: string): Promise<RoomTypeDto> {
   const row = await queryOne<DbRoomTypeRow>(
     `SELECT
       rt.id,
@@ -116,16 +117,24 @@ export async function createRoomType(input: CreateRoomTypeInput): Promise<RoomTy
   const photosJson = JSON.stringify(input.photos);
 
   const row = await queryOne<DbRoomTypeRow>(
-    `INSERT INTO room_types (name, base_price, capacity, description, amenities, photos)
-     VALUES (?, ?, ?, ?, ?, ?)
+    `INSERT INTO room_types (id, name, base_price, capacity, description, amenities, photos)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
      RETURNING id, name, base_price, capacity, description, amenities, photos`,
-    [input.name, input.base_price, input.capacity, input.description ?? null, amenitiesJson, photosJson],
+    [
+      newId(),
+      input.name,
+      input.base_price,
+      input.capacity,
+      input.description ?? null,
+      amenitiesJson,
+      photosJson,
+    ],
   );
 
   return mapRow({ ...row!, total_rooms: 0 });
 }
 
-export async function updateRoomType(id: number, input: UpdateRoomTypeInput): Promise<RoomTypeDto> {
+export async function updateRoomType(id: string, input: UpdateRoomTypeInput): Promise<RoomTypeDto> {
   await getRoomType(id);
 
   if (input.name) {
@@ -167,7 +176,7 @@ export async function updateRoomType(id: number, input: UpdateRoomTypeInput): Pr
   return getRoomType(id);
 }
 
-export async function deleteRoomType(id: number): Promise<{ message: string }> {
+export async function deleteRoomType(id: string): Promise<{ message: string }> {
   await getRoomType(id);
 
   const roomsCount =

@@ -29,6 +29,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { RoomCreateInput, roomCreateSchema } from "@/features/rooms/schema";
 import { RoomCreatePayload } from "@/features/rooms/types";
+import { RoomNotFound } from "@/features/rooms/components/room-detail";
+import { isRoomId } from "@/features/rooms/room-id";
 import {
   useCreateRoom,
   useUpdateRoom,
@@ -61,11 +63,11 @@ export function RoomCreate({ roomId }: { roomId?: string } = {}) {
   const searchParams = useSearchParams();
   const editId = roomId || searchParams.get("id") || searchParams.get("roomId");
   const isEdit = !!editId;
+  const knownRoom = isRoomId(editId);
+  const knownRoomId = knownRoom ? (editId ?? "") : "";
   const createRoom = useCreateRoom();
-  const updateRoom = useUpdateRoom(editId || "");
-  const { data: roomData, isLoading: roomLoading } = useRoomDetail(
-    editId || "",
-  );
+  const updateRoom = useUpdateRoom(knownRoomId);
+  const { data: roomData, isLoading: roomLoading } = useRoomDetail(knownRoomId);
 
   const filledRef = useRef<string | null>(null);
 
@@ -112,6 +114,10 @@ export function RoomCreate({ roomId }: { roomId?: string } = {}) {
         .filter((u: any): u is string => Boolean(u)),
     });
   }, [roomData, editId, reset]);
+
+  if (isEdit && !knownRoom) {
+    return <RoomNotFound />;
+  }
 
   const formattedPrice =
     typeof watchBasePrice === "number" &&

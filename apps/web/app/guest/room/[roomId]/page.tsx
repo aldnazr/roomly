@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import {
   RoomDetail,
   RoomDetailError,
+  RoomNotFound,
   type RoomDetailCopy,
 } from "@/features/rooms/components/room-detail";
 import { RoomDetailSkeleton } from "@/features/rooms/components/room-detail-skeleton";
+import { isRoomId } from "@/features/rooms/room-id";
 import { usePublicRoom } from "@/features/rooms/use-public-rooms";
 
 const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
@@ -52,7 +54,10 @@ function BackToCatalog() {
 
 export default function GuestRoomDetailPage() {
   const { roomId } = useParams<{ roomId: string }>();
-  const { data, isLoading, isError, error, refetch } = usePublicRoom(roomId);
+  const knownRoom = isRoomId(roomId);
+  const { data, isLoading, isError, error, refetch } = usePublicRoom(
+    knownRoom ? roomId : "",
+  );
   const room = data?.data;
 
   if (isLoading) {
@@ -63,7 +68,9 @@ export default function GuestRoomDetailPage() {
     <div className="space-y-6">
       <BackToCatalog />
 
-      {isError || !room ? (
+      {!knownRoom ? (
+        <RoomNotFound copy={GUEST_ROOM_DETAIL_COPY} />
+      ) : isError || !room ? (
         <RoomDetailError
           error={error}
           onRetry={() => refetch()}

@@ -232,6 +232,8 @@ curl -s -X DELETE http://localhost:4000/api/users/2 \
 
 Manage room types (Standard, Deluxe, etc.). Reading requires `rooms.browse` permission (held by staff, admin). Create, update, and delete require `room_types.manage` permission (admin).
 
+Room type ids are UUIDv4 strings, and the `:id` route parameter only accepts that format. A numeric or otherwise malformed id is answered with `400`.
+
 ### List
 
 `GET /api/room-types[?capacity_min=N&capacity_max=N]`
@@ -241,7 +243,7 @@ curl -s http://localhost:4000/api/room-types \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-- `200` → `{ "data": [ { "id": 1, "name": "Deluxe", "base_price": 750000, "capacity": 2, "description": "...", "amenities": ["WiFi", "AC"], "photos": ["https://..."], "total_rooms": 5 } ] }`
+- `200` → `{ "data": [ { "id": "45be122e-9214-4954-bd40-130f94c8af0f", "name": "Deluxe", "base_price": 750000, "capacity": 2, "description": "...", "amenities": ["WiFi", "AC"], "photos": ["https://..."], "total_rooms": 5 } ] }`
 
 ### Get
 
@@ -271,7 +273,7 @@ curl -s -X POST http://localhost:4000/api/room-types \
 `PATCH /api/room-types/:id` with optional fields `{ "name", "capacity", "base_price", "description", "amenities", "photos" }`.
 
 ```bash
-curl -s -X PATCH http://localhost:4000/api/room-types/1 \
+curl -s -X PATCH http://localhost:4000/api/room-types/45be122e-9214-4954-bd40-130f94c8af0f \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"base_price":900000}'
@@ -287,7 +289,7 @@ curl -s -X PATCH http://localhost:4000/api/room-types/1 \
 `DELETE /api/room-types/:id`
 
 ```bash
-curl -s -X DELETE http://localhost:4000/api/room-types/1 \
+curl -s -X DELETE http://localhost:4000/api/room-types/45be122e-9214-4954-bd40-130f94c8af0f \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -307,7 +309,7 @@ Read-only room type catalog for the guest page. No token and no permission check
 curl -s "http://localhost:4000/api/public/room-types?capacity_min=2"
 ```
 
-- `200` → `{ "data": [ { "id": 1, "name": "Deluxe", "base_price": 750000, "capacity": 2, "description": "...", "amenities": ["WiFi", "AC"], "photos": ["https://..."], "total_rooms": 5 } ] }`
+- `200` → `{ "data": [ { "id": "45be122e-9214-4954-bd40-130f94c8af0f", "name": "Deluxe", "base_price": 750000, "capacity": 2, "description": "...", "amenities": ["WiFi", "AC"], "photos": ["https://..."], "total_rooms": 5 } ] }`
 - `400` → invalid query parameter
 - `429` → rate limit exceeded, retry after the `Retry-After` header value
 

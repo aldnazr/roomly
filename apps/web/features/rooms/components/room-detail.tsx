@@ -83,6 +83,7 @@ export const DEFAULT_ROOM_DETAIL_COPY: RoomDetailCopy = {
   errorTitle: "Could not load room",
   errorDescription: "Could not load room.",
   notFoundTitle: "Room not found",
+  notFoundDescription: "This room type is no longer part of the catalogue.",
   retryLabel: "Try again",
 };
 
@@ -224,6 +225,40 @@ export function RoomDetail({ room, copy }: RoomDetailProps) {
   );
 }
 
+interface RoomNotFoundProps {
+  copy?: Partial<RoomDetailCopy>;
+  onRetry?: () => void;
+}
+
+export function RoomNotFound({ copy, onRetry }: RoomNotFoundProps) {
+  const text: RoomDetailCopy = { ...DEFAULT_ROOM_DETAIL_COPY, ...copy };
+
+  return (
+    <div
+      role="alert"
+      className="flex flex-col items-center justify-center rounded-3xl border border-destructive/20 bg-destructive/5 p-10 text-center"
+    >
+      <p className="text-base font-semibold text-destructive">
+        {text.notFoundTitle}
+      </p>
+      <p className="mt-1 max-w-md text-xs text-muted-foreground">
+        {text.notFoundDescription ?? text.errorDescription}
+      </p>
+      {onRetry && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          className="mt-4 h-11 gap-2 sm:h-8"
+        >
+          <IconRotateClockwise className="size-4" />
+          {text.retryLabel}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 interface RoomDetailErrorProps {
   error?: Error | null;
   onRetry?: () => void;
@@ -233,18 +268,15 @@ interface RoomDetailErrorProps {
 export function RoomDetailError({ error, onRetry, copy }: RoomDetailErrorProps) {
   const text: RoomDetailCopy = { ...DEFAULT_ROOM_DETAIL_COPY, ...copy };
   const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-  const notFound = status === 404;
 
-  let description: string;
-  if (notFound && text.notFoundDescription) {
-    description = text.notFoundDescription;
-  } else if (text.hideErrorDetail) {
-    description = text.errorDescription;
-  } else {
-    description = error?.message || text.errorDescription;
+  if (status === 404) {
+    return (
+      <RoomNotFound
+        copy={copy}
+        onRetry={text.hideRetryOnNotFound ? undefined : onRetry}
+      />
+    );
   }
-
-  const showRetry = onRetry && !(notFound && text.hideRetryOnNotFound);
 
   return (
     <div
@@ -252,12 +284,12 @@ export function RoomDetailError({ error, onRetry, copy }: RoomDetailErrorProps) 
       className="flex flex-col items-center justify-center rounded-3xl border border-destructive/20 bg-destructive/5 p-10 text-center"
     >
       <p className="text-base font-semibold text-destructive">
-        {notFound ? text.notFoundTitle : text.errorTitle}
+        {text.errorTitle}
       </p>
       <p className="mt-1 max-w-md text-xs text-muted-foreground">
-        {description}
+        {text.hideErrorDetail ? text.errorDescription : error?.message || text.errorDescription}
       </p>
-      {showRetry && (
+      {onRetry && (
         <Button
           variant="outline"
           size="sm"

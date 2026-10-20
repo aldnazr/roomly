@@ -3,7 +3,7 @@ export type RoomResponse = {
 };
 
 export type Room = {
-  id: number;
+  id: string;
   name: string;
   base_price: number;
   capacity: number;

@@ -14,6 +14,8 @@ function isPublicPath(pathname: string): boolean {
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await auth();
+  const role = session?.user?.role;
+  const isGuest = role === "guest";
 
   if (!session) {
     return isPublicPath(pathname) ?
@@ -22,6 +24,23 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (pathname === "/login" || pathname.startsWith("/login/")) {
+    return NextResponse.redirect(
+      new URL(isGuest ? "/guest" : "/dashboard", request.url),
+    );
+  }
+
+  if (isGuest) {
+    if (pathname === "/" || pathname.startsWith("/dashboard")) {
+      return NextResponse.redirect(new URL("/guest", request.url));
+    }
+    if (isPublicPath(pathname)) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/guest", request.url));
+  }
+
+  // Authenticated staff/admin visiting the public guest area go to dashboard.
+  if (pathname === "/guest" || pathname.startsWith("/guest/")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

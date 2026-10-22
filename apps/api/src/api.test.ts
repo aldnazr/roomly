@@ -398,16 +398,12 @@ describe("roles API", () => {
     const { data } = (await res.json()) as {
       data: { slug: string; name: string; description: string; permissions: string[] }[];
     };
-    expect(data.map((role) => role.slug)).toEqual(["staff", "admin"]);
+    expect(data.map((role) => role.slug)).toEqual(["guest", "staff", "admin"]);
     expect(data[0]!.permissions).toEqual([
       "rooms.browse",
       "bookings.create",
       "bookings.view_own",
       "bookings.cancel_own",
-      "bookings.view_all",
-      "bookings.check_in",
-      "bookings.check_out",
-      "rooms.update_status",
     ]);
     const admin = data.find((role) => role.slug === "admin")!;
     expect(admin.permissions).toContain("permissions.manage");

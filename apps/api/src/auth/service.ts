@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { query, queryOne } from "../db";
 import { requireJwtSecret } from "../config";
 import { HttpError } from "../errors";
-import { parseLoginBody } from "./schema";
+import { parseLoginBody, type RegisterInput } from "./schema";
 
 const TOKEN_TTL_SECONDS = 3600;
 const INVALID_CREDENTIALS = "Invalid email or password";
@@ -130,5 +130,42 @@ export async function getMe(userId: number): Promise<MeDto> {
       description: user.role_description,
     },
     permissions,
+  };
+}
+
+
+export async function registerGuest(input: RegisterInput) {
+  const existing = await queryOne<{ id: number }>(
+    "SELECT id FROM users WHERE email = ? COLLATE NOCASE",
+    [input.email],
+  );
+  if (existing) {
+    throw new HttpError(409, "Email is already in use");
+  }
+
+  const role = await queryOne<{ id: number }>("SELECT id FROM roles WHERE slug = ?", ["guest"]);
+  if (!role) {
+    throw new HttpError(500, "Guest role is not configured");
+  }
+
+  const passwordHash = await bcrypt.hash(input.password, 12);
+
+  const result = await queryOne<{ id: number; name: string; email: string; role: string }>(
+    `INSERT INTO users (name, email, role, password_hash)
+     VALUES (?, ?, ?, ?)
+     RETURNING id, name, email, role`,
+    [input.name, input.email, "guest", passwordHash],
+  );
+
+  return {
+    data: {
+      user: {
+        id: result!.id,
+        username: null,
+        name: result!.name,
+        email: result!.email,
+        role: result!.role,
+      },
+    },
   };
 }

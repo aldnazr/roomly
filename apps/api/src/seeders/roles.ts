@@ -86,6 +86,17 @@ const permissions = [
 
 const roles = [
   {
+    slug: "guest",
+    name: "Guest",
+    description: "Tamu yang dapat mencari ketersediaan, membuat booking, dan mengelola booking miliknya.",
+    permissions: [
+      "rooms.browse",
+      "bookings.create",
+      "bookings.view_own",
+      "bookings.cancel_own",
+    ],
+  },
+  {
     slug: "staff",
     name: "Front Desk / Staff",
     description: "Petugas operasional yang menangani booking dan status kamar.",

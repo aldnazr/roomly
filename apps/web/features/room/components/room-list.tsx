@@ -82,7 +82,9 @@ export function RoomList({
           {text.errorTitle}
         </p>
         <p className="mt-1 max-w-md text-xs text-muted-foreground">
-          {text.hideErrorDetail ? text.errorDescription : error?.message || text.errorDescription}
+          {text.hideErrorDetail
+            ? text.errorDescription
+            : error?.message || text.errorDescription}
         </p>
         {onRetry && (
           <Button
@@ -105,7 +107,9 @@ export function RoomList({
         <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
           <IconDoor className="size-6" />
         </div>
-        <h3 className="font-heading text-base font-medium">{text.emptyTitle}</h3>
+        <h3 className="font-heading text-base font-medium">
+          {text.emptyTitle}
+        </h3>
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">
           {text.emptyDescription}
         </p>
@@ -123,21 +127,22 @@ export function RoomList({
             href={`${hrefBase}/${room.id}`}
             className="group/room block rounded-4xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Card className="h-full overflow-hidden border border-border/60 bg-card p-0 shadow-xs transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/room:border-border group-hover/room:shadow-md">
+            <Card className="h-full overflow-hidden border border-border/60 bg-card p-0 shadow-xs transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/room:shadow-md group-hover/room:ring-2! group-hover/room:ring-primary!">
               <div className="relative aspect-16/10 w-full overflow-hidden bg-muted">
-                {photo ?
+                {photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={photo}
                     alt={room.name}
-                    className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/room:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
                     loading="lazy"
                   />
-                : <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground/70">
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground/70">
                     <IconPhotoOff className="size-6" />
                     <span className="text-xs">{text.noPhotoLabel}</span>
                   </div>
-                }
+                )}
                 <div className="absolute top-3 right-3 rounded-full bg-background/85 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur-md shadow-xs">
                   {text.unitsLabel(room.total_rooms)}
                 </div>

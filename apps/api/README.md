@@ -80,6 +80,27 @@ Tokens are HS256 JWTs valid for one hour, carrying `sub` (user id), `role`,
 `iat`, and `exp`. Send them as `Authorization: Bearer <accessToken>` on protected
 endpoints such as those in [Roles](#roles). There is no refresh/revocation: tokens are valid until expiry.
 
+### Register (Guest)
+
+`POST /api/auth/register` creates a new `guest` account. Public endpoint, rate
+limited per client IP (5 requests per 60 seconds, fixed window, in memory).
+
+```bash
+curl -s -X POST http://localhost:4000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Guest User","email":"guest@example.com","password":"secure-pass-123"}'
+```
+
+- `201` → `{ "data": { "user": { "id", "username": null, "name", "email", "role": "guest" } } }`
+- `400` → body validation failed (missing/empty name, invalid email, password < 8 chars)
+- `409` → email already in use
+- `429` → rate limit exceeded, retry after the `Retry-After` header value
+- `500` → guest role not configured (run `bun run seed:roles`)
+
+The registered account has the `guest` role permissions (`rooms.browse`,
+`bookings.create`, `bookings.view_own`, `bookings.cancel_own`). Registration does
+not issue a token; call `POST /api/auth/login` afterward to obtain an access token.
+
 ### Profile & Permissions
 
 `GET /api/auth/me` returns the authenticated user's full profile, complete role object, and permissions array.

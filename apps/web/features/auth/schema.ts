@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { email, z } from "zod";
 
 const loginIdentifier = z
   .string()
@@ -20,3 +20,14 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export const registerSchema = z.object({
+  name: z.string().min(1, "Nama lengkap wajib diisi"),
+  email: z.email("Email tidak valid"),
+  password: z.string().min(8, "Password minimal 8 karakter"),
+  terms: z.boolean().refine((val) => val === true, {
+    message: "Anda harus menyetujui syarat & ketentuan",
+  }),
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;

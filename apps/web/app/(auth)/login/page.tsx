@@ -47,7 +47,6 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { identifier: "", password: "" },
   });
 
   async function onSubmit(data: LoginInput) {
@@ -174,6 +173,17 @@ export default function LoginPage() {
                   >
                     {isSubmitting ? <Spinner /> : <IconDoorEnter />}
                     Masuk
+                  </Button>
+                  <Button
+                    variant={"outline"}
+                    type="button"
+                    size="lg"
+                    className="w-full"
+                    disabled={isSubmitting}
+                    nativeButton={false}
+                    render={<Link href={"/register"} />}
+                  >
+                    Daftar
                   </Button>
                 </Field>
               </FieldGroup>

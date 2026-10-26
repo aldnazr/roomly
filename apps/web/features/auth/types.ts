@@ -32,3 +32,15 @@ export type MeRole = {
   name: string;
   description: string;
 };
+
+export type RegisterResponse = {
+  data: {
+    user: {
+      id: number;
+      username: string;
+      name: string;
+      email: string;
+      role: string;
+    };
+  };
+};

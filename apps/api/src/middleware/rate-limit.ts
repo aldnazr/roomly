@@ -9,18 +9,8 @@ type RateLimitOptions = {
   message?: string;
 };
 
-const windows = new Map<string, Window>();
-let lastPruneAt = 0;
-
 function clientKey(req: Request): string {
   return req.ip ?? req.socket.remoteAddress ?? "unknown";
-}
-
-function prune(now: number) {
-  for (const [key, window] of windows) {
-    if (window.resetAt <= now) windows.delete(key);
-  }
-  lastPruneAt = now;
 }
 
 // Fixed window counter per client IP. Cheap and dependency free, so it only
@@ -31,6 +21,16 @@ export function rateLimit({
   windowMs,
   message,
 }: RateLimitOptions): RequestHandler {
+  const windows = new Map<string, Window>();
+  let lastPruneAt = 0;
+
+  function prune(now: number) {
+    for (const [key, window] of windows) {
+      if (window.resetAt <= now) windows.delete(key);
+    }
+    lastPruneAt = now;
+  }
+
   return (req, res, next) => {
     const now = Date.now();
     const key = clientKey(req);

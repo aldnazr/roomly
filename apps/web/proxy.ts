@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 
 // Paths an anonymous visitor may reach. "/" is public because app/page.tsx
 // decides where to send the visitor based on the session.
-const PUBLIC_PATHS = ["/", "/login", "/guest"];
+const PUBLIC_PATHS = ["/", "/login", "/guest", "/register"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(
@@ -18,8 +18,8 @@ export default async function proxy(request: NextRequest) {
   const isGuest = role === "guest";
 
   if (!session) {
-    return isPublicPath(pathname) ?
-        NextResponse.next()
+    return isPublicPath(pathname)
+      ? NextResponse.next()
       : NextResponse.redirect(new URL("/login", request.url));
   }
 

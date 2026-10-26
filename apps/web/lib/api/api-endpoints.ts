@@ -2,6 +2,7 @@ export const API_ENDPOINTS = {
   auth: {
     login: "/api/auth/login",
     me: "/api/auth/me",
+    register: "/api/auth/register",
   },
   permission: {
     base: "/api/permissions",

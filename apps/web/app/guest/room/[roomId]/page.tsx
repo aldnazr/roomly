@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { IconArrowLeft, IconShoppingBagPlus } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconShoppingBag,
+  IconShoppingBagPlus,
+} from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   RoomDetail,
@@ -75,7 +79,7 @@ export default function GuestRoomDetailPage() {
         <BackToCatalog />
         {isGuest && (
           <Button size={isMobile ? "icon" : "default"}>
-            <IconShoppingBagPlus className="size-4" />{" "}
+            <IconShoppingBagPlus className="size-4 md:size-4.5" />{" "}
             <span className="hidden md:block">Checkout</span>
           </Button>
         )}

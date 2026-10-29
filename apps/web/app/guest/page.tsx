@@ -1,9 +1,12 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { RoomList } from "@/features/room/components/room-list";
 import type { RoomListCopy } from "@/features/room/components/room-list";
 import { RoomListSkeleton } from "@/features/room/components/room-list-skeleton";
 import { usePublicRooms } from "@/features/room/use-public-room";
+import { CartButton } from "@/components/cart-button";
 
 const GUEST_ROOM_LIST_COPY: RoomListCopy = {
   errorTitle: "Gagal memuat daftar kamar",
@@ -26,16 +29,18 @@ export default function GuestPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          Kamar yang bisa Anda pesan
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Harga dasar per malam, kapasitas, dan fasilitas setiap tipe kamar di
-          Roomly Hotel &amp; Stays.
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            Kamar yang bisa Anda pesan
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            Harga dasar per malam, kapasitas, dan fasilitas setiap tipe kamar di
+            Roomly Hotel &amp; Stays.
+          </p>
+        </div>
+        <CartButton />
       </div>
-
       {isLoading ? (
         <RoomListSkeleton />
       ) : (

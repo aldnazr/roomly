@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconShoppingBagPlus } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   RoomDetail,
@@ -13,6 +13,8 @@ import {
 import { RoomDetailSkeleton } from "@/features/room/components/room-detail-skeleton";
 import { isRoomId } from "@/features/room/room-id";
 import { usePublicRoom } from "@/features/room/use-public-room";
+import { useSession } from "next-auth/react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
   aboutTitle: "Tentang kamar ini",
@@ -59,6 +61,9 @@ export default function GuestRoomDetailPage() {
     knownRoom ? roomId : "",
   );
   const room = data?.data;
+  const { data: userData } = useSession();
+  let isGuest = userData?.user.role?.toLowerCase() === "guest";
+  const isMobile = useIsMobile();
 
   if (isLoading) {
     return <RoomDetailSkeleton label="Memuat detail kamar" />;
@@ -66,8 +71,15 @@ export default function GuestRoomDetailPage() {
 
   return (
     <div className="space-y-6">
-      <BackToCatalog />
-
+      <div className="flex items-center justify-between">
+        <BackToCatalog />
+        {isGuest && (
+          <Button size={isMobile ? "icon" : "default"}>
+            <IconShoppingBagPlus className="size-4" />{" "}
+            <span className="hidden md:block">Checkout</span>
+          </Button>
+        )}
+      </div>
       {!knownRoom ? (
         <RoomNotFound copy={GUEST_ROOM_DETAIL_COPY} />
       ) : isError || !room ? (

@@ -10,6 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "cn";
 import type { Room } from "../types";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import Image from "next/image";
+import { autoImplementMethods } from "next/dist/server/route-modules/app-route/helpers/auto-implement-methods";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const idr = new Intl.NumberFormat("id-ID", {
   style: "currency",
@@ -98,6 +102,7 @@ export function RoomDetail({ room, copy }: RoomDetailProps) {
   const text: RoomDetailCopy = { ...DEFAULT_ROOM_DETAIL_COPY, ...copy };
   const photos = photoUrls(room.photos);
   const amenities = room.amenities ?? [];
+  const isMobile = useIsMobile();
 
   return (
     <div className="space-y-8">
@@ -106,13 +111,14 @@ export function RoomDetail({ room, copy }: RoomDetailProps) {
           <div
             className={`grid gap-2 ${photos.length <= 1 ? "grid-cols-1" : "grid-cols-3"}`}
           >
-            <div className="relative aspect-16/10 md:col-span-2 md:aspect-auto md:h-100">
-              <img
+            <AspectRatio ratio={isMobile ? 5 / 3 : 5 / 2}>
+              <Image
+                fill
                 src={photos[0]}
                 alt={room.name}
-                className="h-full w-full object-cover"
+                className="object-cover"
               />
-            </div>
+            </AspectRatio>
             {photos.length > 1 && (
               <div className="hidden flex-col gap-2 md:flex">
                 {photos.slice(1, 3).map((url, idx) => (

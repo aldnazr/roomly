@@ -2,9 +2,32 @@
 
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { IconDoorEnter } from "@tabler/icons-react";
+import {
+  IconDeviceDesktop,
+  IconDoorEnter,
+  IconMoon,
+  IconSun,
+  IconUser,
+  IconUserCircle,
+} from "@tabler/icons-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 export function GuestHeader() {
   const { status } = useSession();
@@ -25,7 +48,7 @@ export function GuestHeader() {
       </Link>
 
       <div className="flex items-center gap-2">
-        <ModeToggle className="size-11 sm:size-9" />
+        <ModeToggle />
         <div className="flex items-center gap-2">
           {!isSignedIn ? (
             <Button
@@ -36,12 +59,7 @@ export function GuestHeader() {
               Masuk
             </Button>
           ) : isGuest ? (
-            <Button
-              onClick={() => signOut({ redirectTo: "/login" })}
-              className="h-11 px-4 sm:h-9 sm:px-3"
-            >
-              Logout
-            </Button>
+            <GuestProfile />
           ) : (
             <Button
               nativeButton={false}
@@ -54,5 +72,38 @@ export function GuestHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+function GuestProfile() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button size={"icon"} variant="outline">
+            <IconUser />
+          </Button>
+        }
+      />
+      <DropdownMenuContent className="w-40" align="start">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuItem>
+            Profile
+            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => signOut({ redirectTo: "/login" })}
+          >
+            Log out
+            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

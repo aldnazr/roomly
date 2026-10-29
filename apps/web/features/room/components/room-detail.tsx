@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { cn } from "cn";
 import type { Room } from "../types";
 
 const idr = new Intl.NumberFormat("id-ID", {
@@ -74,7 +75,8 @@ export const DEFAULT_ROOM_DETAIL_COPY: RoomDetailCopy = {
   pricePeriod: "/ night",
   capacityLabel: "Max Capacity",
   unitsLabel: "Total Inventory",
-  capacitySummary: (capacity) => `${capacity} ${capacity === 1 ? "guest" : "guests"}`,
+  capacitySummary: (capacity) =>
+    `${capacity} ${capacity === 1 ? "guest" : "guests"}`,
   unitsSummary: (total) => `${total} ${total === 1 ? "unit" : "units"}`,
   capacityValue: (capacity) => `${capacity} guests`,
   unitsValue: (total) => `${total} units`,
@@ -101,33 +103,33 @@ export function RoomDetail({ room, copy }: RoomDetailProps) {
     <div className="space-y-8">
       {photos.length > 0 ? (
         <div className="overflow-hidden rounded-3xl border border-border/60 bg-muted">
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            <div className="relative aspect-16/10 md:col-span-2 md:aspect-auto md:h-80">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+          <div
+            className={`grid gap-2 ${photos.length <= 1 ? "grid-cols-1" : "grid-cols-3"}`}
+          >
+            <div className="relative aspect-16/10 md:col-span-2 md:aspect-auto md:h-100">
               <img
                 src={photos[0]}
                 alt={room.name}
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="hidden flex-col gap-2 md:flex">
-              {photos.slice(1, 3).map((url, idx) => (
-                <div key={`${url}-${idx}`} className="relative h-39 overflow-hidden bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt={`${room.name} ${idx + 2}`}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
-              {photos.length <= 1 && (
-                <div className="flex h-full items-center justify-center bg-muted/50 text-xs text-muted-foreground">
-                  {text.noExtraPhotosLabel}
-                </div>
-              )}
-            </div>
+            {photos.length > 1 && (
+              <div className="hidden flex-col gap-2 md:flex">
+                {photos.slice(1, 3).map((url, idx) => (
+                  <div
+                    key={`${url}-${idx}`}
+                    className="relative h-39 overflow-hidden bg-muted"
+                  >
+                    <img
+                      src={url}
+                      alt={`${room.name}`}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -211,7 +213,9 @@ export function RoomDetail({ room, copy }: RoomDetailProps) {
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">{text.unitsLabel}</span>
+                  <span className="text-muted-foreground">
+                    {text.unitsLabel}
+                  </span>
                   <span className="font-medium text-foreground">
                     {text.unitsValue(room.total_rooms)}
                   </span>
@@ -265,7 +269,11 @@ interface RoomDetailErrorProps {
   copy?: Partial<RoomDetailCopy>;
 }
 
-export function RoomDetailError({ error, onRetry, copy }: RoomDetailErrorProps) {
+export function RoomDetailError({
+  error,
+  onRetry,
+  copy,
+}: RoomDetailErrorProps) {
   const text: RoomDetailCopy = { ...DEFAULT_ROOM_DETAIL_COPY, ...copy };
   const status = axios.isAxiosError(error) ? error.response?.status : undefined;
 
@@ -287,7 +295,9 @@ export function RoomDetailError({ error, onRetry, copy }: RoomDetailErrorProps) 
         {text.errorTitle}
       </p>
       <p className="mt-1 max-w-md text-xs text-muted-foreground">
-        {text.hideErrorDetail ? text.errorDescription : error?.message || text.errorDescription}
+        {text.hideErrorDetail
+          ? text.errorDescription
+          : error?.message || text.errorDescription}
       </p>
       {onRetry && (
         <Button

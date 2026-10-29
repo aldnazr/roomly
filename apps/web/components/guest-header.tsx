@@ -27,8 +27,6 @@ export function GuestHeader() {
       <div className="flex items-center gap-2">
         <ModeToggle className="size-11 sm:size-9" />
         <div className="flex items-center gap-2">
-          <ModeToggle className="size-11 sm:size-9" />
-
           {!isSignedIn ? (
             <Button
               nativeButton={false}

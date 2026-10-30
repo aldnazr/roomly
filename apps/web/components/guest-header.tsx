@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import {
   IconDeviceDesktop,
   IconDoorEnter,
@@ -28,8 +28,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { useCartStore } from "@/lib/store/cart-store";
-import { AUTH_EVENT, broadcastAuthEvent } from "@/lib/auth/auth-channel";
+import { logout } from "@/lib/auth/logout";
 
 export function GuestHeader() {
   const { status } = useSession();
@@ -100,9 +99,7 @@ function GuestProfile() {
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {
-              broadcastAuthEvent(AUTH_EVENT.LOGOUT);
-              (signOut({ redirectTo: "/login" }),
-                useCartStore.persist.clearStorage());
+              void logout("/login");
             }}
           >
             Log out

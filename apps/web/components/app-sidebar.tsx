@@ -7,7 +7,6 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
-import { signOut } from "next-auth/react";
 import {
   IconDashboard,
   IconDoor,
@@ -16,7 +15,7 @@ import {
 } from "@tabler/icons-react";
 import { NavMain } from "./nav-main";
 import { RoomlyHeader } from "./roomly-header";
-import { AUTH_EVENT, broadcastAuthEvent } from "@/lib/auth/auth-channel";
+import { logout } from "@/lib/auth/logout";
 
 export function AppSidebar() {
   const data = [
@@ -53,8 +52,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <NavUser
           logout={async () => {
-            broadcastAuthEvent(AUTH_EVENT.LOGOUT);
-            await signOut({ redirectTo: "/guest" });
+            await logout("/guest");
           }}
         />
       </SidebarFooter>

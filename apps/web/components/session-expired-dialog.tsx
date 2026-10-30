@@ -1,12 +1,10 @@
 "use client";
 
 import { IconLock } from "@tabler/icons-react";
-import { signOut } from "next-auth/react";
 
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -15,19 +13,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSessionStore } from "@/lib/store/session-store";
-import { AUTH_EVENT, broadcastAuthEvent } from "@/lib/auth/auth-channel";
-import { useCartStore } from "@/lib/store/cart-store";
+import { logout } from "@/lib/auth/logout";
 
 export function SessionExpiredDialog() {
-  const { open } = useSessionStore();
+  const open = useSessionStore((s) => s.open);
 
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) useSessionStore.getState().hideSessionExpired();
-      }}
-    >
+    <AlertDialog open={open}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogMedia>
@@ -39,13 +31,7 @@ export function SessionExpiredDialog() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction
-            onClick={() => {
-              broadcastAuthEvent(AUTH_EVENT.LOGOUT);
-              (signOut({ redirectTo: "/login" }),
-                useCartStore.persist.clearStorage());
-            }}
-          >
+          <AlertDialogAction onClick={() => logout("/login")}>
             Masuk kembali
           </AlertDialogAction>
         </AlertDialogFooter>

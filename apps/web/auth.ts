@@ -17,7 +17,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             password: credentials.password as string,
           });
 
-           const { access_token: accessToken, expires_in: expiresIn, user } = response.data;
+          const {
+            access_token: accessToken,
+            expires_in: expiresIn,
+            user,
+          } = response.data;
 
           return {
             id: String(user.id),
@@ -43,7 +47,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role;
         token.accessToken = user.accessToken;
         token.expiresAt = user.expiresAt;
+        return token;
       }
+
+      // Access token Express sudah habis → session NextAuth ikut tidak valid
+      // if (Date.now() >= (token.expiresAt as number)) {
+      //   return null;
+      // }
 
       return token;
     },

@@ -1,8 +1,8 @@
-export type RoomResponse = {
+export interface RoomResponse {
   data: Room[];
-};
+}
 
-export type Room = {
+export interface Room {
   id: string;
   name: string;
   base_price: number;
@@ -11,17 +11,17 @@ export type Room = {
   amenities: string[];
   photos: string[];
   total_rooms: number;
-};
+}
 
-export type RoomDetailResponse = {
+export interface RoomDetailResponse {
   data: Room;
-};
+}
 
-export type RoomCreatePayload = {
+export interface RoomCreatePayload {
   name: string;
   capacity: number;
   base_price: number;
   description?: string;
   amenities?: string[];
   photos?: string[];
-};
+}

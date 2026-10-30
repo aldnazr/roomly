@@ -21,7 +21,7 @@ import {
   FieldTitle,
 } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 import { Permission } from "@/features/permission/types";
 import { useSetPermission } from "@/features/permission/use-permission";
 import { useRoleDetail } from "@/features/role/use-role";

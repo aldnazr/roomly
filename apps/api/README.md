@@ -15,6 +15,10 @@ Required environment variables (see `.env.example`):
 - `TURSO_AUTH_TOKEN` – Turso auth token (not needed for `file:` databases)
 - `JWT_SECRET` – signing secret for access tokens, at least 32 characters
 - `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` – used by the admin seeder
+- `PAYMENT_PROVIDER` – payment provider (default `mock`)
+- `PAYMENT_EXPIRY_MINUTES` – payment expiry window in minutes (default 15)
+- `PAYMENT_MAX_ATTEMPTS` – max payment attempts per reservation (default 3)
+- `MOCK_WEBHOOK_SECRET` – HMAC secret for the mock webhook (default `change-me`)
 
 ## Run
 
@@ -71,7 +75,7 @@ curl -s http://localhost:4000/api/auth/login \
   -d '{"username":"admin","password":"..."}'
 ```
 
-- `200` → `{ "data": { "accessToken", "expiresIn": 3600, "user": { "id", "username", "name", "email", "role" } } }`
+- `200` → `{ "data": { "access_token", "expires_in": 3600, "user": { "id", "username", "name", "email", "role" } } }`
 - `400` → malformed JSON or invalid fields
 - `401` → identical generic error for unknown email/username, wrong password, or missing hash
 - `500` → unexpected failure (details only in server logs)
@@ -365,8 +369,103 @@ curl -s "http://localhost:4000/api/availability?check_in=2026-10-01&check_out=20
 Only room types with `capacity >= guests` and `available_rooms > 0` are returned in `results`.
 
 
+## Payments
+
+Create and track payments for a reservation. All endpoints except the webhook
+require `Authorization: Bearer <accessToken>`; access is limited to the
+reservation owner or staff/manager/admin. Amounts are in `IDR`.
+
+Payment methods: `va` (virtual account, requires `bank`) and `qris` (no bank).
+Payment statuses: `pending`, `paid`, `failed`, `expired`.
+
+A reservation must be in `pending_payment` status before a payment can be
+created. Creating a payment with the same method (and bank, for `va`) while an
+active pending payment exists returns that existing payment. Expired pending
+payments are expired lazily on access. A reservation allows at most
+`PAYMENT_MAX_ATTEMPTS` payments (default 3). On `paid`, the reservation
+becomes `confirmed` and `paid_at` is set. On `expired`, if no other pending
+payment remains, the reservation becomes `cancelled`.
+
+Each payment expires after `PAYMENT_EXPIRY_MINUTES` minutes (default 15); a
+background sweeper runs every 30 seconds. Responses include `expires_at`,
+`server_time`, and `remaining_seconds` for client-side countdowns.
+
+### Create
+
+`POST /api/payments` with JSON `{ "reservation_id", "method", "bank"? }`.
+
+```bash
+curl -s -X POST http://localhost:4000/api/payments \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"reservation_id":"...","method":"va","bank":"bca"}'
+```
+
+- `201` → `{ "data": { "id", "reservation_id", "amount", "currency": "IDR", "method", "bank", "status": "pending", "va_number", "qr_string", "expires_at", "server_time", "remaining_seconds", "paid_at" } }`
+- `400` → body validation failed, or `bank` missing/extra for the method
+- `401` → missing, malformed, invalid, or expired token
+- `403` → caller does not own the reservation and lacks staff access
+- `404` → reservation not found
+- `409` → reservation is not in `pending_payment` status, or maximum payment attempts reached
+
+### Get
+
+`GET /api/payments/:id`
+
+```bash
+curl -s http://localhost:4000/api/payments/$PAYMENT_ID \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+- `200` → payment object (same shape as create); pending payments past expiry are expired lazily
+- `401` → missing, malformed, invalid, or expired token
+- `403` → caller does not own the reservation and lacks staff access
+- `404` → payment not found
+
+### Webhook (mock provider)
+
+`POST /api/payments/webhook/mock` receives provider callbacks. No auth; the
+body is verified with an HMAC-SHA256 signature.
+
+```bash
+curl -s -X POST http://localhost:4000/api/payments/webhook/mock \
+  -H "Content-Type: application/json" \
+  -H "x-signature: $SIGNATURE" \
+  -d '{"provider_ref":"MOCK-REF-...","status":"paid"}'
+```
+
+- `200` → `{ "message": "OK" }`
+- `400` → invalid JSON or payload structure
+- `401` → invalid signature
+- `404` → payment not found
+
+The signature is computed as `HMAC-SHA256(MOCK_WEBHOOK_SECRET, rawBody)` and
+sent hex-encoded in `x-signature`, `signature`, or `x-mock-signature`.
+
+### Simulate (development only)
+
+`POST /api/payments/:id/simulate` with JSON `{ "result": "paid" | "failed" }`
+flips a payment's status without a provider callback. Disabled in production
+(returns `404`). Requires auth and reservation access.
+
+```bash
+curl -s -X POST http://localhost:4000/api/payments/$PAYMENT_ID/simulate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"result":"paid"}'
+```
+
+- `200` → `{ "message": "OK" }`
+- `400` → invalid body
+- `401` → missing, malformed, invalid, or expired token
+- `403` → caller does not own the reservation and lacks staff access
+- `404` → payment not found, or endpoint disabled in production
+
 ## Notes
+
 
 - Access tokens cannot be revoked before they expire.
 - The public room catalog is rate limited per client IP (120 requests per 60 seconds, in memory). The rate limit lives in the API process, so it resets on deploy and does not span multiple instances.
 - Login and the staff routes still have no brute-force protection; add a rate limit or lockout there before public deployment.
+- Payments use the mock provider by default (`PAYMENT_PROVIDER=mock`); the provider is swappable but only `mock` is implemented. Webhook callbacks are verified with `MOCK_WEBHOOK_SECRET`.
+- The expiry sweeper runs in-process every 30 seconds and resets on deploy; it does not span multiple instances.

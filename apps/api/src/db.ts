@@ -100,8 +100,9 @@ const reservationsTableSql = (
         date(check_out, '+0 days') IS NOT NULL AND
         date(check_out, '+0 days') = check_out
       ),
-      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled')),
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'pending_payment', 'confirmed', 'checked_in', 'checked_out', 'cancelled')),
       total_price INTEGER NOT NULL CHECK(total_price >= 0),
+      paid_at TEXT,
       CHECK(check_out > check_in),
       CHECK(status NOT IN ('checked_in', 'checked_out') OR room_id IS NOT NULL),
       FOREIGN KEY(room_id, room_type_id) REFERENCES ${roomsRef}(id, room_type_id) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -147,13 +148,13 @@ const PRICING_RULE_INDEX_SQL = `
 const RESERVATION_TRIGGER_SQL = `
     CREATE TRIGGER IF NOT EXISTS trg_reservations_insert_no_overlap
     BEFORE INSERT ON reservations
-    WHEN NEW.room_id IS NOT NULL AND NEW.status IN ('pending', 'confirmed', 'checked_in')
+    WHEN NEW.room_id IS NOT NULL AND NEW.status IN ('pending', 'pending_payment', 'confirmed', 'checked_in')
     BEGIN
       SELECT RAISE(ABORT, 'Reservation overlaps an active booking for this room')
       WHERE EXISTS (
         SELECT 1 FROM reservations
         WHERE room_id = NEW.room_id
-          AND status IN ('pending', 'confirmed', 'checked_in')
+          AND status IN ('pending', 'pending_payment', 'confirmed', 'checked_in')
           AND NEW.check_in < check_out
           AND NEW.check_out > check_in
       );
@@ -161,14 +162,14 @@ const RESERVATION_TRIGGER_SQL = `
 
     CREATE TRIGGER IF NOT EXISTS trg_reservations_update_no_overlap
     BEFORE UPDATE ON reservations
-    WHEN NEW.room_id IS NOT NULL AND NEW.status IN ('pending', 'confirmed', 'checked_in')
+    WHEN NEW.room_id IS NOT NULL AND NEW.status IN ('pending', 'pending_payment', 'confirmed', 'checked_in')
     BEGIN
       SELECT RAISE(ABORT, 'Reservation overlaps an active booking for this room')
       WHERE EXISTS (
         SELECT 1 FROM reservations
         WHERE room_id = NEW.room_id
           AND id <> OLD.id
-          AND status IN ('pending', 'confirmed', 'checked_in')
+          AND status IN ('pending', 'pending_payment', 'confirmed', 'checked_in')
           AND NEW.check_in < check_out
           AND NEW.check_out > check_in
       );
@@ -623,6 +624,58 @@ const migrations: Migration[] = [
         throw new Error("room_types_use_uuid_ids left foreign key violations behind");
       }
     },
+  },
+  {
+    id: 8,
+    name: "payments_schema",
+    up: async (db) => {
+      const resColumns = await db.execute("PRAGMA table_info(reservations)");
+      const resColumnNames = resColumns.rows.map((row) => row.name as string);
+      if (!resColumnNames.includes("paid_at")) {
+        await db.execute("ALTER TABLE reservations ADD COLUMN paid_at TEXT");
+      }
+
+      await db.executeMultiple(`
+        ${reservationsTableSql("reservations_new", { ifNotExists: true, roomTypeIdType: "TEXT" })}
+        INSERT INTO reservations_new (id, guest_id, room_type_id, room_id, check_in, check_out, status, total_price, paid_at)
+          SELECT id, guest_id, room_type_id, room_id, check_in, check_out, status, total_price, paid_at FROM reservations;
+        DROP TABLE reservations;
+        ALTER TABLE reservations_new RENAME TO reservations;
+        ${ROOM_RELATED_INDEX_SQL}
+        ${RESERVATION_TRIGGER_SQL}
+      `);
+
+      await db.executeMultiple(`
+        CREATE TABLE IF NOT EXISTS payments (
+          id TEXT PRIMARY KEY CHECK(id GLOB '${UUID_GLOB}'),
+          reservation_id TEXT NOT NULL REFERENCES reservations(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+          amount INTEGER NOT NULL CHECK(amount >= 0),
+          method TEXT NOT NULL CHECK(method IN ('va', 'qris')),
+          bank TEXT CHECK(bank IS NULL OR bank IN ('bca', 'bni', 'bri', 'mandiri')),
+          status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'paid', 'failed', 'expired')),
+          provider_ref TEXT NOT NULL UNIQUE CHECK(length(trim(provider_ref)) > 0),
+          va_number TEXT,
+          qr_string TEXT,
+          expires_at TEXT NOT NULL,
+          paid_at TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        ) STRICT;
+
+        CREATE INDEX IF NOT EXISTS idx_payments_reservation_id ON payments(reservation_id);
+        CREATE INDEX IF NOT EXISTS idx_payments_status_expires_at ON payments(status, expires_at);
+      `);
+    },
+  },
+  {
+    id: 9,
+    name: "reserve_rooms_during_payment",
+    up: (db) =>
+      db.executeMultiple(`
+        DROP TRIGGER IF EXISTS trg_reservations_insert_no_overlap;
+        DROP TRIGGER IF EXISTS trg_reservations_update_no_overlap;
+        ${RESERVATION_TRIGGER_SQL}
+      `),
   },
 ];
 

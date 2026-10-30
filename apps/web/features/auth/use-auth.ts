@@ -14,6 +14,6 @@ export function useAuthMe() {
 
 export function useRegister() {
   return useMutation({
-    mutationFn: (payload: RegisterInput) => authApi.register(payload),
+    mutationFn: authApi.register,
   });
 }

@@ -67,7 +67,7 @@ describe("migrations", () => {
     const applied = (
       await query<{ id: number }>("SELECT id FROM schema_migrations ORDER BY id ASC")
     ).map((row) => row.id);
-    expect(applied).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(applied).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
     const columns = (
       await query<{ name: string }>("PRAGMA table_info(users)")
@@ -99,7 +99,7 @@ describe("migrations", () => {
     const count = (
       await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM schema_migrations")
     )!.n;
-    expect(count).toBe(7);
+    expect(count).toBe(9);
   });
 });
 
@@ -143,8 +143,8 @@ describe("POST /api/auth/login", () => {
 
     const json = (await res.json()) as {
       data: {
-        accessToken: string;
-        expiresIn: number;
+        access_token: string;
+        expires_in: number;
         user: {
           id: number;
           username: string;
@@ -154,7 +154,7 @@ describe("POST /api/auth/login", () => {
         };
       };
     };
-    expect(json.data.expiresIn).toBe(3600);
+    expect(json.data.expires_in).toBe(3600);
     expect(json.data.user).toEqual({
       id: expect.any(Number),
       username: "admin",
@@ -164,7 +164,7 @@ describe("POST /api/auth/login", () => {
     });
 
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(json.data.accessToken, secret, {
+    const { payload } = await jwtVerify(json.data.access_token, secret, {
       issuer: "roomly-api",
       audience: "roomly",
     });
@@ -263,7 +263,7 @@ describe("permissions API", () => {
 
   beforeAll(async () => {
     const res = await login({ email: "admin@example.com", password: "rotated-password-456" });
-    guestToken = ((await res.json()) as { data: { accessToken: string } }).data.accessToken;
+    guestToken = ((await res.json()) as { data: { access_token: string } }).data.access_token;
   });
 
   test("returns 401 without or with an invalid token", async () => {
@@ -310,7 +310,7 @@ describe("GET /api/auth/me", () => {
 
   beforeAll(async () => {
     const res = await login({ email: "admin@example.com", password: "rotated-password-456" });
-    adminToken = ((await res.json()) as { data: { accessToken: string } }).data.accessToken;
+    adminToken = ((await res.json()) as { data: { access_token: string } }).data.access_token;
   });
 
   test("returns 401 without token or with malformed token", async () => {
@@ -371,14 +371,14 @@ describe("roles API", () => {
 
   beforeAll(async () => {
     const admin = await login({ email: "admin@example.com", password: "rotated-password-456" });
-    adminToken = ((await admin.json()) as { data: { accessToken: string } }).data.accessToken;
+    adminToken = ((await admin.json()) as { data: { access_token: string } }).data.access_token;
 
     await db.execute({
       sql: "INSERT INTO users (name, email, role, password_hash) VALUES ('Staff', 'guest@example.com', 'staff', ?)",
       args: [await bcrypt.hash("guest-password-123", 12)],
     });
     const guest = await login({ email: "guest@example.com", password: "guest-password-123" });
-    guestToken = ((await guest.json()) as { data: { accessToken: string } }).data.accessToken;
+    guestToken = ((await guest.json()) as { data: { access_token: string } }).data.access_token;
   });
 
   // ponytail: restore seeded permissions after tests that replace staff's set.
@@ -505,10 +505,10 @@ describe("users API", () => {
 
   beforeAll(async () => {
     const admin = await login({ email: "admin@example.com", password: "rotated-password-456" });
-    adminToken = ((await admin.json()) as { data: { accessToken: string } }).data.accessToken;
+    adminToken = ((await admin.json()) as { data: { access_token: string } }).data.access_token;
 
     const guest = await login({ email: "guest@example.com", password: "guest-password-123" });
-    guestToken = ((await guest.json()) as { data: { accessToken: string } }).data.accessToken;
+    guestToken = ((await guest.json()) as { data: { access_token: string } }).data.access_token;
   });
 
   test("returns 401 without or with an invalid token", async () => {
@@ -706,10 +706,10 @@ describe("room-types API", () => {
 
   beforeAll(async () => {
     const admin = await login({ email: "admin@example.com", password: "rotated-password-456" });
-    adminToken = ((await admin.json()) as { data: { accessToken: string } }).data.accessToken;
+    adminToken = ((await admin.json()) as { data: { access_token: string } }).data.access_token;
 
     const guest = await login({ email: "guest@example.com", password: "guest-password-123" });
-    guestToken = ((await guest.json()) as { data: { accessToken: string } }).data.accessToken;
+    guestToken = ((await guest.json()) as { data: { access_token: string } }).data.access_token;
   });
 
   test("returns 401 without or with an invalid token", async () => {
@@ -878,7 +878,7 @@ describe("availability API", () => {
 
   beforeAll(async () => {
     const guest = await login({ email: "guest@example.com", password: "guest-password-123" });
-    guestToken = ((await guest.json()) as { data: { accessToken: string } }).data.accessToken;
+    guestToken = ((await guest.json()) as { data: { access_token: string } }).data.access_token;
 
     roomTypeId = await insertReturningUuid(
       "INSERT INTO room_types (id, name, base_price, capacity, description, amenities, photos) VALUES (?, 'Avail Suite', 500000, 2, 'Test', '[]', '[]') RETURNING id",

@@ -1,5 +1,25 @@
+"use client";
+
+import Link from "next/link";
+import {
+  IconArrowRight,
+  IconShoppingBag,
+  IconTrash,
+} from "@tabler/icons-react";
+import { toast } from "sonner";
+import { useState } from "react";
 import { useChartStore } from "@/lib/store/chart-store";
-import { IconShoppingBag, IconTrash } from "@tabler/icons-react";
+import { formatRupiah } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "./ui/item";
 import {
   Sheet,
   SheetClose,
@@ -10,43 +30,25 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet";
-import { Button } from "./ui/button";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "./ui/item";
-import { Badge } from "./ui/badge";
-import { formatRupiah } from "@/lib/utils";
-import Link from "next/link";
-import { toast } from "sonner";
-import { useState } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export function CartButton() {
-  const chartItems = useChartStore((s) => s.items);
-  const removeItem = useChartStore((s) => s.removeItem);
+  const items = useChartStore((state) => state.items);
+  const removeItem = useChartStore((state) => state.removeItem);
   const [open, setOpen] = useState(false);
-  const isEmpty = chartItems.length === 0;
   const isMobile = useIsMobile();
+  const isEmpty = items.length === 0;
+  const total = items.reduce((sum, room) => sum + room.base_price, 0);
 
-  const handleOpenChange = (open: boolean) => {
-    if (open && isEmpty) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen && isEmpty) {
       toast.error("Keranjang kosong", {
         id: "cart-empty",
         description: "Tambahkan kamar dulu sebelum membuka keranjang.",
       });
       return;
     }
-    setOpen(open);
+    setOpen(nextOpen);
   };
-
-  function HandleRemoveItem(e: React.MouseEvent, roomId: string) {
-    e.preventDefault();
-    removeItem(roomId);
-  }
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -54,85 +56,74 @@ export function CartButton() {
         nativeButton
         aria-disabled={isEmpty}
         render={
-          <Button className="relative shrink-0 size-9 md:size-11">
-            <IconShoppingBag className="size-5 md:size-6" />
-            <div className="absolute -top-1.5 -right-1.5 flex size-6 items-center justify-center rounded-full bg-background text-foreground text-xs font-semibold shadow-md shadow-black/30 z-10">
-              <span>{chartItems.length}</span>
-            </div>
+          <Button className="relative size-11 shrink-0 rounded-full">
+            <IconShoppingBag className="size-5" stroke={1.6} />
+            <span className="absolute -top-1.5 -right-1.5 flex size-6 items-center justify-center rounded-full bg-background text-xs font-semibold text-foreground shadow-[0_4px_14px_rgb(25_20_15/0.16)] ring-1 ring-foreground/8">
+              {items.length}
+            </span>
           </Button>
         }
       />
       <SheetContent
         side={isMobile ? "bottom" : "right"}
-        className="rounded-t-3xl max-h-[80vh] md:max-h-full overflow-y-auto"
+        className="max-h-[85dvh] overflow-y-auto rounded-t-[2rem] sm:max-h-full sm:rounded-none"
       >
-        {!isEmpty && (
-          <SheetHeader>
-            <SheetTitle>Keranjang Belanja</SheetTitle>
-            <SheetDescription>
-              Daftar kamar yang telah Anda pilih.
-            </SheetDescription>
-          </SheetHeader>
-        )}
-        {isEmpty ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12 text-center text-muted-foreground">
-            <div className="rounded-full bg-muted p-4">
-              <IconShoppingBag className="size-8 stroke-[1.5]" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium text-foreground">
-                Keranjang Masih Kosong
-              </p>
-              <p className="text-sm">
-                Pilih kamar pilihan Anda untuk mulai memesan.
-              </p>
-            </div>
+        <SheetHeader>
+          <SheetTitle>Keranjang Anda</SheetTitle>
+          <SheetDescription>
+            Kamar yang siap dilanjutkan ke checkout.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="grid flex-1 auto-rows-min gap-3 px-6">
+          {items.map((room, index) => (
+            <Item key={`${room.id}-${index}`} variant="outline">
+              <ItemContent className="space-y-2">
+                <ItemTitle>{room.name}</ItemTitle>
+                <ItemDescription className="space-x-1 space-y-1">
+                  {room.amenities.slice(0, 3).map((amenity) => (
+                    <Badge key={amenity}>{amenity}</Badge>
+                  ))}
+                </ItemDescription>
+                <ItemDescription>
+                  {formatRupiah(room.base_price)} / malam
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Hapus ${room.name} dari keranjang`}
+                  onClick={() => removeItem(room.id)}
+                >
+                  <IconTrash className="size-4" stroke={1.6} />
+                </Button>
+              </ItemActions>
+            </Item>
+          ))}
+        </div>
+        <SheetFooter>
+          <div className="flex items-center justify-between px-1 text-sm">
+            <span className="text-muted-foreground">Harga dasar</span>
+            <span className="font-semibold text-foreground">
+              {formatRupiah(total)}
+            </span>
           </div>
-        ) : (
-          <div className="grid flex-1 auto-rows-min gap-6 px-4">
-            {chartItems.map((e, idx) => (
-              <Item
-                key={`${e.id}${idx}`}
-                variant="outline"
-                render={<Link href={`/guest/room/${e.id}`} />}
-              >
-                <ItemContent className="space-y-2">
-                  <ItemTitle>{e.name}</ItemTitle>
-                  <ItemDescription className="space-x-1 space-y-1">
-                    {e.amenities.slice(0, 3).map((amn, idx) => (
-                      <Badge key={idx}>{amn}</Badge>
-                    ))}
-                    {e.amenities.length > 3 && (
-                      <Badge>{`+${e.amenities.length - 3} More`}</Badge>
-                    )}
-                  </ItemDescription>
-                  <ItemDescription>
-                    {formatRupiah(e.base_price)}
-                  </ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <Button onClick={(event) => HandleRemoveItem(event, e.id)}>
-                    <IconTrash />
-                  </Button>
-                </ItemActions>
-              </Item>
-            ))}
-          </div>
-        )}
-        {!isEmpty && (
-          <SheetFooter>
-            <div className="flex justify-between">
-              <h2>Total</h2>
-              <h3>
-                {formatRupiah(
-                  chartItems.reduce((acc, value) => acc + value.base_price, 0),
-                )}
-              </h3>
-            </div>
-            <Button type="submit">Bayar</Button>
-            <SheetClose render={<Button variant="outline">Batal</Button>} />
-          </SheetFooter>
-        )}
+          <SheetClose
+            nativeButton={false}
+            render={
+              <Button
+                nativeButton={false}
+                render={<Link href="/guest/checkout" />}
+                className="h-11 w-full rounded-full px-5 sm:h-10"
+              />
+            }
+          >
+            Checkout
+            <span className="flex size-6 items-center justify-center rounded-full bg-primary-foreground/15 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/button:translate-x-0.5">
+              <IconArrowRight className="size-3.5" stroke={1.6} />
+            </span>
+          </SheetClose>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/ui/toast";
+import { toast } from "sonner";
 import { UserFormSkeleton } from "@/features/user/components/user-form-skeleton";
 import {
   UserCreatePayload,
@@ -133,7 +133,6 @@ export default function UserDetailPage() {
             error: "Could not update user.",
           },
         )
-        .catch(() => undefined);
       return;
     }
 
@@ -145,7 +144,6 @@ export default function UserDetailPage() {
         success: `${payload.username} created.`,
         error: "Could not create user.",
       })
-      .catch(() => undefined);
   }
 
   if (isEditing && isUserLoading) return <UserFormSkeleton />;

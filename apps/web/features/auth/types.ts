@@ -8,8 +8,8 @@ export type LoginRequest = {
 
 export type LoginResponse = {
   data: {
-    accessToken: string;
-    expiresIn: number;
+    access_token: string;
+    expires_in: number;
     user: User;
   };
 };

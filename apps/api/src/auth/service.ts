@@ -74,8 +74,8 @@ export async function login(body: unknown) {
 
   return {
     data: {
-      accessToken,
-      expiresIn: TOKEN_TTL_SECONDS,
+      access_token: accessToken,
+      expires_in: TOKEN_TTL_SECONDS,
       user: {
         id: user.id,
         name: user.name,

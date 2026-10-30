@@ -29,4 +29,12 @@ export const API_ENDPOINTS = {
     roomTypes: "/api/public/room-types",
     roomType: (id: string) => `/api/public/room-types/${id}`,
   },
+  reservation: {
+    checkout: "/api/reservations/checkout",
+  },
+  payment: {
+    create: "/api/payments",
+    detail: (id: string) => `/api/payments/${id}`,
+    simulate: (id: string) => `/api/payments/${id}/simulate`,
+  },
 } as const;

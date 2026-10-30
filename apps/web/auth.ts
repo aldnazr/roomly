@@ -17,7 +17,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             password: credentials.password as string,
           });
 
-          const { accessToken, expiresIn, user } = response.data;
+           const { access_token: accessToken, expires_in: expiresIn, user } = response.data;
 
           return {
             id: String(user.id),

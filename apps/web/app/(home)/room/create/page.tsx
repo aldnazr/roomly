@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { toast } from "@/components/ui/toast";
+
 import { RoomCreateInput, roomCreateSchema } from "@/features/room/schema";
 import { RoomCreatePayload } from "@/features/room/types";
 import { RoomNotFound } from "@/features/room/components/room-detail";
@@ -37,6 +37,7 @@ import {
   useRoomDetail,
 } from "@/features/room/use-room";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 const PRESET_AMENITIES = [
   "WiFi",

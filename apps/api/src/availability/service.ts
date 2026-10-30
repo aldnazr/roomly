@@ -106,7 +106,7 @@ export async function searchAvailability(
       `SELECT id, room_id, check_in, check_out
        FROM reservations
        WHERE room_type_id = ?
-         AND status IN ('pending', 'confirmed', 'checked_in')
+         AND status IN ('pending', 'pending_payment', 'confirmed', 'checked_in')
          AND check_in < ?
          AND check_out > ?`,
       [rt.id, query.check_out, query.check_in],

@@ -17,8 +17,15 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
     res.status(err.status).json({ error: { message: err.message } });
   } else if (err instanceof ZodError) {
-    res.status(400).json({ error: { message: err.issues[0]?.message ?? "Invalid request body" } });
-  } else if (err instanceof SyntaxError || err?.type === "entity.parse.failed") {
+    res
+      .status(400)
+      .json({
+        error: { message: err.issues[0]?.message ?? "Invalid request body" },
+      });
+  } else if (
+    err instanceof SyntaxError ||
+    err?.type === "entity.parse.failed"
+  ) {
     res.status(400).json({ error: { message: "Malformed JSON body" } });
   } else if (err?.type === "entity.too.large") {
     res.status(413).json({ error: { message: "Request body too large" } });
@@ -54,12 +61,7 @@ export function createApp() {
   app.use("/api/room-types", roomTypesRouter);
   app.use("/api/availability", availabilityRouter);
   app.use("/api/reservations", reservationsRouter);
-app.use("/api/admin/orders", adminOrderHistoryRouter);
-app.use("/api/admin/order-history", adminOrderHistoryRouter);
-app.use("/api/orders", adminOrderHistoryRouter);
-app.use("/api/orders/history", adminOrderHistoryRouter);
-app.use("/api/reservations/admin/history", adminOrderHistoryRouter);
-app.use("/api/reservations/history/admin", adminOrderHistoryRouter);
+  app.use("/api/admin/orders", adminOrderHistoryRouter);
   app.use("/api/payments", paymentsRouter);
 
   app.use((_req, res) => {
@@ -69,4 +71,3 @@ app.use("/api/reservations/history/admin", adminOrderHistoryRouter);
 
   return app;
 }
-

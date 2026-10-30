@@ -148,7 +148,6 @@ async function hasPermission(user: AuthUser, slug: string): Promise<boolean> {
   );
   return !!row;
 }
-
 async function getUserEmail(user: AuthUser): Promise<string | null> {
   const row = await queryOne<{ email: string }>("SELECT email FROM users WHERE id = ?", [user.id]);
   return row?.email ?? null;
@@ -213,21 +212,27 @@ const RESERVATION_HISTORY_BASE = `
 `;
 
 export async function listReservations(user: AuthUser): Promise<ReservationHistoryDto[]> {
-  const canViewAll = await hasPermission(user, "bookings.view_all");
-  const canViewOwn = await hasPermission(user, "bookings.view_own");
-  if (!canViewAll && !canViewOwn) {
-    throw new HttpError(403, "Insufficient permissions");
-  }
+  const email = await getUserEmail(user);
 
   const params: (string | number)[] = [];
-  let sql = RESERVATION_HISTORY_BASE;
-  if (!canViewAll) {
-    sql += ` WHERE (r.guest_id = ? OR r.guest_id IN (SELECT g.id FROM guests g WHERE g.email = ? COLLATE NOCASE))`;
-    const email = await getUserEmail(user);
-    params.push(user.id);
-    params.push(email ?? "");
+  const conditions: string[] = [];
+
+  // Only reservations whose guest record is linked to the authenticated user
+  // (by email) may be returned. Never match on the numeric user id, which
+  // refers to a different table and would leak other users' reservations.
+  if (email) {
+    conditions.push(
+      "r.guest_id IN (SELECT g.id FROM guests g WHERE g.email = ? COLLATE NOCASE)",
+    );
+    params.push(email);
+  } else {
+    conditions.push("0 = 1");
   }
-  sql += " ORDER BY r.id ASC";
+  conditions.push(
+    "(r.paid_at IS NOT NULL OR EXISTS (SELECT 1 FROM payments pay WHERE pay.reservation_id = r.id AND pay.status = 'paid'))",
+  );
+
+  const sql = `${RESERVATION_HISTORY_BASE} WHERE ${conditions.join(" AND ")} ORDER BY r.id ASC`;
 
   const rows = await query<ReservationHistoryRow>(sql, params);
   return rows.map(mapReservationHistoryRow);
@@ -237,29 +242,25 @@ export async function getReservation(
   id: number,
   user: AuthUser,
 ): Promise<ReservationHistoryDto> {
-  const canViewAll = await hasPermission(user, "bookings.view_all");
-  const canViewOwn = await hasPermission(user, "bookings.view_own");
-
   const row = await queryOne<ReservationHistoryRow>(
     `${RESERVATION_HISTORY_BASE} WHERE r.id = ?`,
     [id],
   );
   if (!row) throw new HttpError(404, "Reservation not found");
 
-  if (!canViewAll) {
-    if (!canViewOwn) throw new HttpError(403, "Insufficient permissions");
-    const email = await getUserEmail(user);
-    const guestRow = await queryOne<{ email: string | null }>(
-      "SELECT email FROM guests WHERE id = ?",
-      [row.guest_id],
-    );
-    const isOwner =
-      row.guest_id === user.id ||
-      (!!email &&
-        !!guestRow?.email &&
-        email.toLowerCase() === guestRow.email.toLowerCase());
-    if (!isOwner) throw new HttpError(403, "Access denied to this reservation");
-  }
+  const email = await getUserEmail(user);
+  const guestRow = await queryOne<{ email: string | null }>(
+    "SELECT email FROM guests WHERE id = ?",
+    [row.guest_id],
+  );
+  const isOwner =
+    !!email &&
+    !!guestRow?.email &&
+    email.toLowerCase() === guestRow.email.toLowerCase();
+
+  // Callers with the view_all permission may inspect any reservation.
+  const canViewAll = await hasPermission(user, "bookings.view_all");
+  if (!isOwner && !canViewAll) throw new HttpError(403, "Access denied to this reservation");
 
   return mapReservationHistoryRow(row);
 }

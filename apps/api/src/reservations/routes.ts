@@ -27,9 +27,13 @@ const listHandler = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 reservationsRouter.get("/", listHandler);
-reservationsRouter.get("/me", listHandler);
-reservationsRouter.get("/mine", listHandler);
-reservationsRouter.get("/history", listHandler);
+
+const notFoundHandler = (_req: Request, _res: Response, next: NextFunction) => {
+  next(new HttpError(404, "Not found"));
+};
+reservationsRouter.get("/me", notFoundHandler);
+reservationsRouter.get("/mine", notFoundHandler);
+reservationsRouter.get("/history", notFoundHandler);
 
 reservationsRouter.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {

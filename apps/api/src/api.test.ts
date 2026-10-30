@@ -807,7 +807,93 @@ describe("room-types API", () => {
   });
 });
 
+describe("reservations API", () => {
+  const reservationsUrl = (path = "") => `${baseUrl}/api/reservations${path}`;
+  const get = (path: string, token?: string) =>
+    fetch(reservationsUrl(path), {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
 
+  let userAToken: string;
+  let userBToken: string;
+  let reservationAId: number;
+  let reservationBId: number;
+
+  beforeAll(async () => {
+    await db.execute({
+      sql: "INSERT INTO users (name, email, role, password_hash) VALUES ('Res User A', 'resusera@example.com', 'guest', ?)",
+      args: [await bcrypt.hash("res-pass-a-123", 12)],
+    });
+    await db.execute({
+      sql: "INSERT INTO users (name, email, role, password_hash) VALUES ('Res User B', 'resuserb@example.com', 'guest', ?)",
+      args: [await bcrypt.hash("res-pass-b-123", 12)],
+    });
+
+    const loginA = await login({ email: "resusera@example.com", password: "res-pass-a-123" });
+    userAToken = ((await loginA.json()) as { data: { access_token: string } }).data.access_token;
+    const loginB = await login({ email: "resuserb@example.com", password: "res-pass-b-123" });
+    userBToken = ((await loginB.json()) as { data: { access_token: string } }).data.access_token;
+
+    const guestAId = await insertReturningId(
+      "INSERT INTO guests (name, email) VALUES ('Res User A', 'resusera@example.com') RETURNING id",
+    );
+    const guestBId = await insertReturningId(
+      "INSERT INTO guests (name, email) VALUES ('Res User B', 'resuserb@example.com') RETURNING id",
+    );
+
+    const roomTypeId = await insertReturningUuid(
+      "INSERT INTO room_types (id, name, base_price, capacity, description, amenities, photos) VALUES (?, 'Res Test Type', 500000, 2, 'Test', '[]', '[]') RETURNING id",
+      [newId()],
+    );
+
+    reservationAId = await insertReturningId(
+      "INSERT INTO reservations (guest_id, room_type_id, check_in, check_out, status, total_price, paid_at) VALUES (?, ?, '2026-12-01', '2026-12-03', 'confirmed', 1000000, datetime('now')) RETURNING id",
+      [guestAId, roomTypeId],
+    );
+    reservationBId = await insertReturningId(
+      "INSERT INTO reservations (guest_id, room_type_id, check_in, check_out, status, total_price, paid_at) VALUES (?, ?, '2026-12-04', '2026-12-06', 'confirmed', 1000000, datetime('now')) RETURNING id",
+      [guestBId, roomTypeId],
+    );
+
+    // Decoy reservation whose guest_id numerically matches user B's id but whose
+    // guest email belongs to user A's guest record, to guard against id-based leaks.
+    await db.execute({
+      sql: "INSERT INTO guests (name, email) VALUES ('Decoy Guest', 'resusera@example.com')",
+    });
+  });
+
+  test("returns 401 without or with an invalid token", async () => {
+    expect((await get("")).status).toBe(401);
+    expect((await get("", "not-a-jwt")).status).toBe(401);
+    expect((await get(`/${reservationAId}`)).status).toBe(401);
+  });
+
+  test("lists only the authenticated user's own reservations", async () => {
+    const resA = await get("", userAToken);
+    expect(resA.status).toBe(200);
+    const dataA = ((await resA.json()) as { data: { id: string }[] }).data;
+    const idsA = dataA.map((r) => r.id);
+    expect(idsA).toContain(String(reservationAId));
+    expect(idsA).not.toContain(String(reservationBId));
+
+    const resB = await get("", userBToken);
+    expect(resB.status).toBe(200);
+    const dataB = ((await resB.json()) as { data: { id: string }[] }).data;
+    const idsB = dataB.map((r) => r.id);
+    expect(idsB).toContain(String(reservationBId));
+    expect(idsB).not.toContain(String(reservationAId));
+  });
+
+  test("denies access to another user's reservation", async () => {
+    expect((await get(`/${reservationAId}`, userBToken)).status).toBe(403);
+    expect((await get(`/${reservationBId}`, userAToken)).status).toBe(403);
+  });
+
+  test("allows access to the owner's own reservation", async () => {
+    expect((await get(`/${reservationAId}`, userAToken)).status).toBe(200);
+    expect((await get(`/${reservationBId}`, userBToken)).status).toBe(200);
+  });
+});
 describe("public room-types API", () => {
   const publicUrl = (path = "") => `${baseUrl}/api/public/room-types${path}`;
   const get = (path = "") => fetch(publicUrl(path));

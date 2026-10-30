@@ -138,8 +138,8 @@ Data persists in Turso, so redeployments do not reset anything.
 | `GET`    | `/api/payments/:id`                     | Reservation owner or staff/manager/admin   |
 | `POST`   | `/api/payments/webhook/mock`            | HMAC signature                             |
 | `POST`   | `/api/payments/:id/simulate`            | Reservation access; disabled in production |
-| `GET`    | `/api/reservations` (+ aliases), `/:id` | `bookings.view_own` or `bookings.view_all` |
-| `GET`    | `/api/admin/orders` (+ aliases)         | `admin` role                               |
+| `GET`    | `/api/reservations`, `/:id`             | Authenticated (own reservations with successful payment) |
+| `GET`    | `/api/admin/orders`                     | `admin` role                               |
 
 ---
 
@@ -563,23 +563,17 @@ curl -s -X POST http://localhost:4000/api/payments/$PAYMENT_ID/simulate \
 
 ### My reservations
 
-Returns the authenticated user's own reservations. Requires `Authorization: Bearer <access_token>` and either the `bookings.view_own` or `bookings.view_all` permission.
+Returns the authenticated user's own reservations with a successful payment. Requires `Authorization: Bearer <access_token>`.
 
-- Users with only `bookings.view_own` see reservations linked to their account (matched by guest id or email).
-- Users with `bookings.view_all` see every reservation.
+- Reservations are matched to the caller's account (by guest id or email).
+- Only reservations with a successful payment are included.
 
-All of the following aliases behave identically:
-
-- `GET /api/reservations`
-- `GET /api/reservations/me`
-- `GET /api/reservations/mine`
-- `GET /api/reservations/history`
+`GET /api/reservations`
 
 Responses:
 
 - `200` → list of reservations (below)
 - `401` → missing, malformed, invalid, or expired token
-- `403` → caller lacks both `bookings.view_own` and `bookings.view_all`
 
 ```jsonc
 {
@@ -622,8 +616,6 @@ Admin-only full order history. Requires `Authorization: Bearer <access_token>` a
 curl -s "http://localhost:4000/api/admin/orders?page=1&limit=20&status=confirmed&payment_method=va&start_date=2026-10-01&end_date=2026-10-31" \
   -H "Authorization: Bearer $TOKEN"
 ```
-
-Aliases: `/api/orders`, `/api/orders/history`, `/api/reservations/admin/history`, `/api/reservations/history/admin`.
 
 ### Query parameters
 

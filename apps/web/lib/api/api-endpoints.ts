@@ -37,4 +37,5 @@ export const API_ENDPOINTS = {
     detail: (id: string) => `/api/payments/${id}`,
     simulate: (id: string) => `/api/payments/${id}/simulate`,
   },
+  history: { guest: "/api/reservations", admin: "/api/admin/orders" },
 } as const;

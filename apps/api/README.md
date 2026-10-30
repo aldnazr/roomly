@@ -2,25 +2,60 @@
 
 Express + Turso (libSQL) API for the room booking app.
 
-## Setup
+## Contents
+
+**Setup**
+
+- [Getting started](#getting-started)
+- [Database and seeding](#database-and-seeding)
+- [Deploy (Vercel)](#deploy-vercel)
+
+**Reference**
+
+- [Conventions](#conventions)
+- [Endpoint overview](#endpoint-overview)
+- [Auth](#auth)
+- [Roles](#roles)
+- [Permissions](#permissions)
+- [Users](#users)
+- [Room Types](#room-types)
+- [Public Room Catalog](#public-room-catalog)
+- [Availability](#availability)
+- [Payments](#payments)
+- [Reservations](#reservations)
+- [Admin Orders](#admin-orders)
+
+**Other**
+
+- [Known limitations](#known-limitations)
+
+---
+
+## Getting started
+
+### Install
 
 ```bash
 bun install
 cp .env.example .env   # then fill in the values
 ```
 
-Required environment variables (see `.env.example`):
+### Environment variables
 
-- `TURSO_DATABASE_URL` – `libsql://...` for Turso Cloud or `file:...` for a local database
-- `TURSO_AUTH_TOKEN` – Turso auth token (not needed for `file:` databases)
-- `JWT_SECRET` – signing secret for access tokens, at least 32 characters
-- `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` – used by the admin seeder
-- `PAYMENT_PROVIDER` – payment provider (default `mock`)
-- `PAYMENT_EXPIRY_MINUTES` – payment expiry window in minutes (default 15)
-- `PAYMENT_MAX_ATTEMPTS` – max payment attempts per reservation (default 3)
-- `MOCK_WEBHOOK_SECRET` – HMAC secret for the mock webhook (default `change-me`)
+See `.env.example`.
 
-## Run
+| Variable                                      | Description                                                       | Default     |
+| --------------------------------------------- | ----------------------------------------------------------------- | ----------- |
+| `TURSO_DATABASE_URL`                          | `libsql://...` for Turso Cloud or `file:...` for a local database | –           |
+| `TURSO_AUTH_TOKEN`                            | Turso auth token (not needed for `file:` databases)               | –           |
+| `JWT_SECRET`                                  | Signing secret for access tokens, at least 32 characters          | –           |
+| `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Used by the admin seeder                                          | –           |
+| `PAYMENT_PROVIDER`                            | Payment provider                                                  | `mock`      |
+| `PAYMENT_EXPIRY_MINUTES`                      | Payment expiry window in minutes                                  | `15`        |
+| `PAYMENT_MAX_ATTEMPTS`                        | Max payment attempts per reservation                              | `3`         |
+| `MOCK_WEBHOOK_SECRET`                         | HMAC secret for the mock webhook                                  | `change-me` |
+
+### Run
 
 ```bash
 bun run dev     # development with watch
@@ -28,46 +63,91 @@ bun run start   # production entrypoint (same TS entry)
 bun run build   # type-check
 ```
 
-Migrations run automatically on startup (tracked in `schema_migrations`).
+## Database and seeding
 
-## Database
+Migrations run automatically on startup (tracked in `schema_migrations`). You can also run them by hand:
 
 ```bash
 bun run db:migrate  # apply pending migrations to TURSO_DATABASE_URL
-bun run seed        # roles, admin, then rooms
 bun run db:setup    # migrate + seed (idempotent, safe to rerun)
 ```
 
+### Seed commands
+
+| Command              | What it does                                                 |
+| -------------------- | ------------------------------------------------------------ |
+| `bun run seed`       | Roles, admin, then rooms                                     |
+| `bun run seed:roles` | Roles and permissions only                                   |
+| `bun run seed:admin` | Admin user from the `ADMIN_*` env vars                       |
+| `bun run seed:rooms` | Room types (Standard, Deluxe, Family, Suite) and their rooms |
+
+### Seeder behavior
+
+- **Rooms** are idempotent: room types upsert by name, rooms upsert by `room_number` (existing `status` values are preserved).
+- **Room numbers** follow a floor-based pattern: `101`–`106` (Standard), `201`–`205` (Deluxe), `301`–`304` (Family), `401`–`403` (Suite).
+- **Admin** is idempotent: rerunning rotates the admin name, password, and role for the configured `ADMIN_EMAIL`. Users without a stored password hash cannot log in.
+
 ## Deploy (Vercel)
 
-Create a Vercel project with Root Directory `apps/api` (Express is detected
-automatically) and set `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `JWT_SECRET`,
-and `CLIENT_ORIGIN` in the project environment variables. Data persists in
-Turso, so redeployments do not reset anything.
+Create a Vercel project with Root Directory `apps/api` (Express is detected automatically) and set these in the project environment variables:
 
-## Seed
+- `TURSO_DATABASE_URL`
+- `TURSO_AUTH_TOKEN`
+- `JWT_SECRET`
+- `CLIENT_ORIGIN`
 
-```bash
-bun run seed          # roles, admin, then rooms
-bun run seed:roles    # roles and permissions only
-bun run seed:admin    # admin user from ADMIN_* env vars
-bun run seed:rooms    # room types (Standard, Deluxe, Family, Suite) + their rooms
-```
+Data persists in Turso, so redeployments do not reset anything.
 
-The rooms seeder is idempotent: room types upsert by name, rooms upsert by
-`room_number` (existing `status` values are preserved). Room numbers follow the
-floor-based pattern `101`–`106` (Standard), `201`–`205` (Deluxe),
-`301`–`304` (Family), `401`–`403` (Suite).
+---
 
-The admin seeder is idempotent: rerunning rotates the admin name/password/role for
-the configured `ADMIN_EMAIL`. Users without a stored password hash cannot log in.
+## Conventions
+
+- **Base URL** in the examples below: `http://localhost:4000`. The examples assume `$TOKEN` holds a valid access token.
+- **Authentication:** protected endpoints expect `Authorization: Bearer <access_token>` and answer `401` when the token is missing, malformed, invalid, or expired. See [Auth](#auth).
+- **Response envelope:** successful responses are wrapped in `{ "data": ... }`. The payment webhook and simulate endpoints return `{ "message": "OK" }` instead.
+- **Response shapes:** a bare `"field"` stands for that field with its actual value.
+- **Rate limits:** fixed window, per client IP, kept in memory (see [Known limitations](#known-limitations)). Exceeding a limit returns `429` with a `Retry-After` header.
+
+  | Endpoint                          | Limit               |
+  | --------------------------------- | ------------------- |
+  | `POST /api/auth/register`         | 5 requests / 60 s   |
+  | `/api/public/room-types` (routes) | 120 requests / 60 s |
+
+## Endpoint overview
+
+| Method   | Path                                    | Access                                     |
+| -------- | --------------------------------------- | ------------------------------------------ |
+| `POST`   | `/api/auth/login`                       | Public                                     |
+| `POST`   | `/api/auth/register`                    | Public (rate limited)                      |
+| `GET`    | `/api/auth/me`                          | Authenticated                              |
+| `GET`    | `/api/roles`                            | Authenticated                              |
+| `GET`    | `/api/roles/:slug`                      | Authenticated                              |
+| `PUT`    | `/api/roles/:slug/permissions`          | `permissions.manage`                       |
+| `GET`    | `/api/permissions`                      | Authenticated                              |
+| `GET`    | `/api/users`, `/api/users/:id`          | `users.manage`                             |
+| `POST`   | `/api/users`                            | `users.manage`                             |
+| `PATCH`  | `/api/users/:id`                        | `users.manage`                             |
+| `DELETE` | `/api/users/:id`                        | `users.manage`                             |
+| `GET`    | `/api/room-types`, `/:id`               | `rooms.browse`                             |
+| `POST`   | `/api/room-types`                       | `room_types.manage`                        |
+| `PATCH`  | `/api/room-types/:id`                   | `room_types.manage`                        |
+| `DELETE` | `/api/room-types/:id`                   | `room_types.manage`                        |
+| `GET`    | `/api/public/room-types`, `/:id`        | Public (rate limited)                      |
+| `GET`    | `/api/availability`                     | `rooms.browse`                             |
+| `POST`   | `/api/payments`                         | Reservation owner or staff/manager/admin   |
+| `GET`    | `/api/payments/:id`                     | Reservation owner or staff/manager/admin   |
+| `POST`   | `/api/payments/webhook/mock`            | HMAC signature                             |
+| `POST`   | `/api/payments/:id/simulate`            | Reservation access; disabled in production |
+| `GET`    | `/api/reservations` (+ aliases), `/:id` | `bookings.view_own` or `bookings.view_all` |
+| `GET`    | `/api/admin/orders` (+ aliases)         | `admin` role                               |
+
+---
 
 ## Auth
 
-`POST /api/auth/login` with JSON `{ "email": "...", "password": "..." }` or
-`{ "username": "...", "password": "..." }` — exactly one of `email`/`username`.
-A username value is matched against both columns, so an email address may also
-be sent in the `username` field.
+### Login
+
+`POST /api/auth/login` with JSON `{ "email": "...", "password": "..." }` or `{ "username": "...", "password": "..." }` — exactly one of `email` / `username`. A `username` value is matched against both columns, so an email address may also be sent in the `username` field.
 
 ```bash
 curl -s http://localhost:4000/api/auth/login \
@@ -80,14 +160,11 @@ curl -s http://localhost:4000/api/auth/login \
 - `401` → identical generic error for unknown email/username, wrong password, or missing hash
 - `500` → unexpected failure (details only in server logs)
 
-Tokens are HS256 JWTs valid for one hour, carrying `sub` (user id), `role`,
-`iat`, and `exp`. Send them as `Authorization: Bearer <accessToken>` on protected
-endpoints such as those in [Roles](#roles). There is no refresh/revocation: tokens are valid until expiry.
+Tokens are HS256 JWTs valid for one hour, carrying `sub` (user id), `role`, `iat`, and `exp`. Send them as `Authorization: Bearer <access_token>` on protected endpoints such as those in [Roles](#roles). There is no refresh or revocation: tokens are valid until expiry.
 
-### Register (Guest)
+### Register (guest)
 
-`POST /api/auth/register` creates a new `guest` account. Public endpoint, rate
-limited per client IP (5 requests per 60 seconds, fixed window, in memory).
+`POST /api/auth/register` creates a new `guest` account. Public endpoint, rate limited per client IP (5 requests per 60 seconds, fixed window, in memory).
 
 ```bash
 curl -s -X POST http://localhost:4000/api/auth/register \
@@ -101,11 +178,9 @@ curl -s -X POST http://localhost:4000/api/auth/register \
 - `429` → rate limit exceeded, retry after the `Retry-After` header value
 - `500` → guest role not configured (run `bun run seed:roles`)
 
-The registered account has the `guest` role permissions (`rooms.browse`,
-`bookings.create`, `bookings.view_own`, `bookings.cancel_own`). Registration does
-not issue a token; call `POST /api/auth/login` afterward to obtain an access token.
+The registered account has the `guest` role permissions: `rooms.browse`, `bookings.create`, `bookings.view_own`, `bookings.cancel_own`. Registration does not issue a token; call `POST /api/auth/login` afterward to obtain an access token.
 
-### Profile & Permissions
+### Current user
 
 `GET /api/auth/me` returns the authenticated user's full profile, complete role object, and permissions array.
 
@@ -117,21 +192,15 @@ curl -s http://localhost:4000/api/auth/me \
 - `200` → `{ "data": { "id": 1, "username": "admin", "name": "Admin", "email": "admin@mail.com", "role": { "slug": "admin", "name": "Admin", "description": "..." }, "permissions": ["rooms.browse", ...] } }`
 - `401` → missing, malformed, invalid, or expired token
 
-
 ## Roles
 
-Roles, permissions, and their mappings live in the `roles`, `permissions`, and
-`role_permissions` tables, seeded by `bun run seed:roles`. Every endpoint below
-needs `Authorization: Bearer <accessToken>` and answers `401` when the token is
-missing, malformed, invalid, or expired.
+Roles, permissions, and their mappings live in the `roles`, `permissions`, and `role_permissions` tables, seeded by `bun run seed:roles`. Every endpoint below needs `Authorization: Bearer <access_token>` and answers `401` when the token is missing, malformed, invalid, or expired.
 
-Permission checks read the database on each request, so a permission change
-applies from the next request onward. The `role` claim inside an issued token
-never changes.
+Permission checks read the database on each request, so a permission change applies from the next request onward. The `role` claim inside an issued token never changes.
 
-### View
+### List
 
-`GET /api/roles` lists every role:
+`GET /api/roles` lists every role.
 
 ```bash
 curl -s http://localhost:4000/api/roles -H "Authorization: Bearer $TOKEN"
@@ -139,14 +208,16 @@ curl -s http://localhost:4000/api/roles -H "Authorization: Bearer $TOKEN"
 
 - `200` → `{ "data": [ { "slug": "staff", "name": "Front Desk / Staff", "description": "...", "permissions": ["rooms.browse", ...] } ] }`
 
+### Get
+
 `GET /api/roles/:slug` returns one role in the same shape.
 
 - `200` → single role object instead of an array
 - `404` → unknown role slug
 
-### Set
+### Replace permissions
 
-`PUT /api/roles/:slug/permissions` replaces the role's full permission set.
+`PUT /api/roles/:slug/permissions` replaces the role's full permission set. The caller's role needs the `permissions.manage` permission.
 
 ```bash
 curl -s -X PUT http://localhost:4000/api/roles/staff/permissions \
@@ -155,24 +226,21 @@ curl -s -X PUT http://localhost:4000/api/roles/staff/permissions \
   -d '{"permissions":["rooms.browse","bookings.view_all"]}'
 ```
 
-The caller's role needs the `permissions.manage` permission.
-
 - `200` → updated role object
 - `400` → body failed validation or a permission slug does not exist; nothing is written
 - `403` → caller's role lacks `permissions.manage`
 - `404` → unknown role slug
 
-`permissions` must be an array of unique non-empty strings. `[]` strips every
-permission from the role. The replace runs in one transaction, so the set never
-ends up half-updated. Any role can be edited, `admin` included: removing
-`permissions.manage` from a role revokes its own access to this endpoint.
-`bun run seed:roles` restores the seeded defaults.
+Notes:
+
+- `permissions` must be an array of unique non-empty strings. `[]` strips every permission from the role.
+- The replace runs in one transaction, so the set never ends up half-updated.
+- Any role can be edited, `admin` included. Removing `permissions.manage` from a role revokes its own access to this endpoint.
+- `bun run seed:roles` restores the seeded defaults.
 
 ## Permissions
 
-`GET /api/permissions` lists every permission available in the system (the set
-seeded by `bun run seed:roles`). Any authenticated user may call it — no extra
-permission required — so role-management UIs can render slug/name/description.
+`GET /api/permissions` lists every permission available in the system (the set seeded by `bun run seed:roles`). Any authenticated user may call it — no extra permission required — so role-management UIs can render slug, name, and description.
 
 ```bash
 curl -s http://localhost:4000/api/permissions -H "Authorization: Bearer $TOKEN"
@@ -181,14 +249,11 @@ curl -s http://localhost:4000/api/permissions -H "Authorization: Bearer $TOKEN"
 - `200` → `{ "data": [ { "slug": "rooms.browse", "name": "Browse rooms", "description": "..." }, ... ] }`
 - `401` → missing, malformed, invalid, or expired token
 
-The list is ordered by seed order and reflects the current database contents;
-a permission added or renamed via the seeder shows up on the next request.
+The list is ordered by seed order and reflects the current database contents; a permission added or renamed via the seeder shows up on the next request.
 
 ## Users
 
-User management endpoints require `Authorization: Bearer <accessToken>` and the
-`users.manage` permission on the caller's role. Responses never expose password
-hashes.
+User management endpoints require `Authorization: Bearer <access_token>` and the `users.manage` permission on the caller's role. Responses never expose password hashes.
 
 ### List
 
@@ -255,7 +320,10 @@ curl -s -X DELETE http://localhost:4000/api/users/2 \
 
 ## Room Types
 
-Manage room types (Standard, Deluxe, etc.). Reading requires `rooms.browse` permission (held by staff, admin). Create, update, and delete require `room_types.manage` permission (admin).
+Manage room types (Standard, Deluxe, etc.).
+
+- **Read** requires the `rooms.browse` permission (held by staff, admin).
+- **Create, update, and delete** require the `room_types.manage` permission (admin).
 
 Room type ids are UUIDv4 strings, and the `:id` route parameter only accepts that format. A numeric or otherwise malformed id is answered with `400`.
 
@@ -326,6 +394,8 @@ curl -s -X DELETE http://localhost:4000/api/room-types/45be122e-9214-4954-bd40-1
 
 Read-only room type catalog for the guest page. No token and no permission check, so the same DTO the staff route returns is served to anonymous visitors. Mounted at `/api/public/room-types` and rate limited per client IP (120 requests per 60 seconds, fixed window, in memory).
 
+The staff routes under `/api/room-types` stay behind `requireAuth` and `rooms.browse`.
+
 ### List
 
 `GET /api/public/room-types[?capacity_min=N&capacity_max=N]`
@@ -347,13 +417,9 @@ curl -s "http://localhost:4000/api/public/room-types?capacity_min=2"
 - `404` → room type not found
 - `429` → rate limit exceeded
 
-The staff routes under `/api/room-types` stay behind `requireAuth` and `rooms.browse`.
-
 ## Availability
 
-Search for available room types across a requested date range and party size. Requires `rooms.browse` permission.
-
-Rooms in `maintenance` status are excluded from inventory. Active reservations (`pending`, `confirmed`, `checked_in`) overlapping the stay reduce available rooms per night (checkout day is non-blocking). Active pricing rules (`price_override` or `multiplier`) are applied automatically to calculate nightly rates and total stay price.
+Search for available room types across a requested date range and party size. Requires the `rooms.browse` permission.
 
 `GET /api/availability?check_in=YYYY-MM-DD&check_out=YYYY-MM-DD&guests=N`
 
@@ -362,33 +428,58 @@ curl -s "http://localhost:4000/api/availability?check_in=2026-10-01&check_out=20
   -H "Authorization: Bearer $TOKEN"
 ```
 
-- `200` → `{ "data": { "check_in": "2026-10-01", "check_out": "2026-10-03", "nights": 2, "guests": 2, "results": [ { "room_type": { ... }, "available_rooms": 3, "price": { "nightly": [ { "date": "2026-10-01", "price": 850000 }, { "date": "2026-10-02", "price": 850000 } ], "total": 1700000, "average_nightly": 850000 } } ] } }`
+- `200` → see the response below
 - `400` → missing/invalid date, `check_out <= check_in`, `guests < 1`, or stay exceeds 30 nights
 - `401` → missing or invalid access token
 
-Only room types with `capacity >= guests` and `available_rooms > 0` are returned in `results`.
+```jsonc
+{
+  "data": {
+    "check_in": "2026-10-01",
+    "check_out": "2026-10-03",
+    "nights": 2,
+    "guests": 2,
+    "results": [
+      {
+        "room_type": { ... },
+        "available_rooms": 3,
+        "price": {
+          "nightly": [
+            { "date": "2026-10-01", "price": 850000 },
+            { "date": "2026-10-02", "price": 850000 }
+          ],
+          "total": 1700000,
+          "average_nightly": 850000
+        }
+      }
+    ]
+  }
+}
+```
 
+How availability is calculated:
+
+- Only room types with `capacity >= guests` and `available_rooms > 0` are returned in `results`.
+- Rooms in `maintenance` status are excluded from inventory.
+- Active reservations (`pending`, `confirmed`, `checked_in`) overlapping the stay reduce the available rooms per night. The checkout day is non-blocking.
+- Active pricing rules (`price_override` or `multiplier`) are applied automatically to calculate nightly rates and the total stay price.
 
 ## Payments
 
-Create and track payments for a reservation. All endpoints except the webhook
-require `Authorization: Bearer <accessToken>`; access is limited to the
-reservation owner or staff/manager/admin. Amounts are in `IDR`.
+Create and track payments for a reservation. All endpoints except the webhook require `Authorization: Bearer <access_token>`; access is limited to the reservation owner or staff/manager/admin. Amounts are in `IDR`.
 
-Payment methods: `va` (virtual account, requires `bank`) and `qris` (no bank).
-Payment statuses: `pending`, `paid`, `failed`, `expired`.
+- **Methods:** `va` (virtual account, requires `bank`) and `qris` (no bank).
+- **Statuses:** `pending`, `paid`, `failed`, `expired`.
 
-A reservation must be in `pending_payment` status before a payment can be
-created. Creating a payment with the same method (and bank, for `va`) while an
-active pending payment exists returns that existing payment. Expired pending
-payments are expired lazily on access. A reservation allows at most
-`PAYMENT_MAX_ATTEMPTS` payments (default 3). On `paid`, the reservation
-becomes `confirmed` and `paid_at` is set. On `expired`, if no other pending
-payment remains, the reservation becomes `cancelled`.
+Rules:
 
-Each payment expires after `PAYMENT_EXPIRY_MINUTES` minutes (default 15); a
-background sweeper runs every 30 seconds. Responses include `expires_at`,
-`server_time`, and `remaining_seconds` for client-side countdowns.
+- A reservation must be in `pending_payment` status before a payment can be created.
+- Creating a payment with the same method (and bank, for `va`) while an active pending payment exists returns that existing payment.
+- A reservation allows at most `PAYMENT_MAX_ATTEMPTS` payments (default 3).
+- On `paid`, the reservation becomes `confirmed` and `paid_at` is set.
+- On `expired`, if no other pending payment remains, the reservation becomes `cancelled`.
+- Each payment expires after `PAYMENT_EXPIRY_MINUTES` minutes (default 15). Expired pending payments are expired lazily on access, and a background sweeper runs every 30 seconds.
+- Responses include `expires_at`, `server_time`, and `remaining_seconds` for client-side countdowns.
 
 ### Create
 
@@ -401,12 +492,23 @@ curl -s -X POST http://localhost:4000/api/payments \
   -d '{"reservation_id":"...","method":"va","bank":"bca"}'
 ```
 
-- `201` → `{ "data": { "id", "reservation_id", "amount", "currency": "IDR", "method", "bank", "status": "pending", "va_number", "qr_string", "expires_at", "server_time", "remaining_seconds", "paid_at" } }`
+- `201` → payment object (below)
 - `400` → body validation failed, or `bank` missing/extra for the method
 - `401` → missing, malformed, invalid, or expired token
 - `403` → caller does not own the reservation and lacks staff access
 - `404` → reservation not found
 - `409` → reservation is not in `pending_payment` status, or maximum payment attempts reached
+
+```jsonc
+{
+  "data": {
+    "id", "reservation_id", "amount", "currency": "IDR",
+    "method", "bank", "status": "pending",
+    "va_number", "qr_string",
+    "expires_at", "server_time", "remaining_seconds", "paid_at"
+  }
+}
+```
 
 ### Get
 
@@ -424,8 +526,7 @@ curl -s http://localhost:4000/api/payments/$PAYMENT_ID \
 
 ### Webhook (mock provider)
 
-`POST /api/payments/webhook/mock` receives provider callbacks. No auth; the
-body is verified with an HMAC-SHA256 signature.
+`POST /api/payments/webhook/mock` receives provider callbacks. No auth; the body is verified with an HMAC-SHA256 signature.
 
 ```bash
 curl -s -X POST http://localhost:4000/api/payments/webhook/mock \
@@ -439,14 +540,11 @@ curl -s -X POST http://localhost:4000/api/payments/webhook/mock \
 - `401` → invalid signature
 - `404` → payment not found
 
-The signature is computed as `HMAC-SHA256(MOCK_WEBHOOK_SECRET, rawBody)` and
-sent hex-encoded in `x-signature`, `signature`, or `x-mock-signature`.
+The signature is computed as `HMAC-SHA256(MOCK_WEBHOOK_SECRET, rawBody)` and sent hex-encoded in `x-signature`, `signature`, or `x-mock-signature`.
 
 ### Simulate (development only)
 
-`POST /api/payments/:id/simulate` with JSON `{ "result": "paid" | "failed" }`
-flips a payment's status without a provider callback. Disabled in production
-(returns `404`). Requires auth and reservation access.
+`POST /api/payments/:id/simulate` with JSON `{ "result": "paid" | "failed" }` flips a payment's status without a provider callback. Disabled in production (returns `404`). Requires auth and reservation access.
 
 ```bash
 curl -s -X POST http://localhost:4000/api/payments/$PAYMENT_ID/simulate \
@@ -461,11 +559,117 @@ curl -s -X POST http://localhost:4000/api/payments/$PAYMENT_ID/simulate \
 - `403` → caller does not own the reservation and lacks staff access
 - `404` → payment not found, or endpoint disabled in production
 
-## Notes
+## Reservations
 
+### My reservations
+
+Returns the authenticated user's own reservations. Requires `Authorization: Bearer <access_token>` and either the `bookings.view_own` or `bookings.view_all` permission.
+
+- Users with only `bookings.view_own` see reservations linked to their account (matched by guest id or email).
+- Users with `bookings.view_all` see every reservation.
+
+All of the following aliases behave identically:
+
+- `GET /api/reservations`
+- `GET /api/reservations/me`
+- `GET /api/reservations/mine`
+- `GET /api/reservations/history`
+
+Responses:
+
+- `200` → list of reservations (below)
+- `401` → missing, malformed, invalid, or expired token
+- `403` → caller lacks both `bookings.view_own` and `bookings.view_all`
+
+```jsonc
+{
+  "data": [
+    {
+      "id", "guest_id",
+      "guest": { "id", "name", "email", "phone" } | null,
+      "guest_name", "guest_email", "guest_phone",
+      "room_type_id",
+      "room_type": { "id", "name" } | null,
+      "room_type_name",
+      "room_id",
+      "room": { "id", "room_number" } | null,
+      "room_number",
+      "check_in", "check_out", "status", "total_price", "paid_at"
+    }
+  ]
+}
+```
+
+Results are ordered by `id` ascending and are not paginated.
+
+### Get
+
+`GET /api/reservations/:id` returns a single reservation in the same shape, wrapped in `{ "data": ... }`, with the same ownership check for callers without `bookings.view_all`.
+
+- `200` → single reservation object
+- `400` → invalid reservation ID
+- `401` → missing, malformed, invalid, or expired token
+- `403` → access denied to that reservation
+- `404` → reservation not found
+
+## Admin Orders
+
+Admin-only full order history. Requires `Authorization: Bearer <access_token>` and the `admin` role.
+
+`GET /api/admin/orders`
+
+```bash
+curl -s "http://localhost:4000/api/admin/orders?page=1&limit=20&status=confirmed&payment_method=va&start_date=2026-10-01&end_date=2026-10-31" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Aliases: `/api/orders`, `/api/orders/history`, `/api/reservations/admin/history`, `/api/reservations/history/admin`.
+
+### Query parameters
+
+| Parameter                         | Description                                                                    |
+| --------------------------------- | ------------------------------------------------------------------------------ |
+| `page`                            | Page number (default `1`)                                                      |
+| `limit`                           | Page size (default `20`, max `100`)                                            |
+| `status`                          | Filters reservation status                                                     |
+| `payment_method` (alias `method`) | Filters latest payment method (`va`, `qris`)                                   |
+| `payment_status`                  | Filters latest payment status                                                  |
+| `start_date` / `end_date`         | Filter by order creation date. Aliases: `date_from` / `date_to`, `from` / `to` |
+| `check_in_from` / `check_in_to`   | Filter by check-in date                                                        |
+
+### Response
+
+```jsonc
+{
+  "data": [
+    {
+      "id", "order_date", "status", "check_in", "check_out", "total_price",
+      "currency": "IDR",
+      "customer": { "id", "name", "email", "phone" },
+      "room": { "id", "room_number" },
+      "room_type": { "id", "name", "type", "capacity", "base_price", "amenities" },
+      "payment": { "id", "method", "bank", "status", "amount", "paid_at", "created_at" } | null,
+      "payment_method",
+      "payment_status"
+    }
+  ],
+  "meta": { "page", "limit", "total", "total_pages", "filters" }
+}
+```
+
+### Relations
+
+- `reservations.guest_id` → `guests.id`
+- `reservations.room_id` → `rooms.id`
+- `reservations.room_type_id` → `room_types.id`
+- latest `payments.reservation_id` → `reservations.id`
+
+---
+
+## Known limitations
 
 - Access tokens cannot be revoked before they expire.
-- The public room catalog is rate limited per client IP (120 requests per 60 seconds, in memory). The rate limit lives in the API process, so it resets on deploy and does not span multiple instances.
 - Login and the staff routes still have no brute-force protection; add a rate limit or lockout there before public deployment.
-- Payments use the mock provider by default (`PAYMENT_PROVIDER=mock`); the provider is swappable but only `mock` is implemented. Webhook callbacks are verified with `MOCK_WEBHOOK_SECRET`.
-- The expiry sweeper runs in-process every 30 seconds and resets on deploy; it does not span multiple instances.
+- Rate limits (register and the public room catalog) are kept in the API process memory. They reset on deploy and do not span multiple instances.
+- The payment expiry sweeper runs in-process every 30 seconds. It resets on deploy and does not span multiple instances.
+- Payments use the mock provider by default (`PAYMENT_PROVIDER=mock`). The provider is swappable, but only `mock` is implemented. Webhook callbacks are verified with `MOCK_WEBHOOK_SECRET`.

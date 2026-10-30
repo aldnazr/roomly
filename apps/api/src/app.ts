@@ -11,6 +11,7 @@ import { publicRoomTypesRouter } from "./room-types/public-routes";
 import { availabilityRouter } from "./availability/routes";
 import { paymentsRouter } from "./payments/routes";
 import { reservationsRouter } from "./reservations/routes";
+import { adminOrderHistoryRouter } from "./order-history/routes";
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
@@ -53,6 +54,12 @@ export function createApp() {
   app.use("/api/room-types", roomTypesRouter);
   app.use("/api/availability", availabilityRouter);
   app.use("/api/reservations", reservationsRouter);
+app.use("/api/admin/orders", adminOrderHistoryRouter);
+app.use("/api/admin/order-history", adminOrderHistoryRouter);
+app.use("/api/orders", adminOrderHistoryRouter);
+app.use("/api/orders/history", adminOrderHistoryRouter);
+app.use("/api/reservations/admin/history", adminOrderHistoryRouter);
+app.use("/api/reservations/history/admin", adminOrderHistoryRouter);
   app.use("/api/payments", paymentsRouter);
 
   app.use((_req, res) => {

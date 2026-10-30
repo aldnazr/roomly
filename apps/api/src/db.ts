@@ -677,6 +677,23 @@ const migrations: Migration[] = [
         ${RESERVATION_TRIGGER_SQL}
       `),
   },
+  {
+    id: 10,
+    name: "reservations_add_created_at",
+    up: async (db) => {
+      const columns = await db.execute("PRAGMA table_info(reservations)");
+      const names = columns.rows.map((row) => row.name as string);
+      if (!names.includes("created_at")) {
+        await db.execute("ALTER TABLE reservations ADD COLUMN created_at TEXT");
+      }
+      await db.execute(
+        "UPDATE reservations SET created_at = COALESCE(created_at, datetime('now'))",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_reservations_created_at ON reservations(created_at)",
+      );
+    },
+  },
 ];
 
 export async function migrate(database: Client = db): Promise<void> {

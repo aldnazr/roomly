@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSessionStore } from "@/lib/store/session-store";
 import { AUTH_EVENT, broadcastAuthEvent } from "@/lib/auth/auth-channel";
+import { useCartStore } from "@/lib/store/cart-store";
 
 export function SessionExpiredDialog() {
   const { open } = useSessionStore();
@@ -41,7 +42,8 @@ export function SessionExpiredDialog() {
           <AlertDialogAction
             onClick={() => {
               broadcastAuthEvent(AUTH_EVENT.LOGOUT);
-              signOut({ redirectTo: "/login" });
+              (signOut({ redirectTo: "/login" }),
+                useCartStore.persist.clearStorage());
             }}
           >
             Masuk kembali

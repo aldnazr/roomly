@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import type { DateRange } from "react-day-picker";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -15,10 +15,9 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
-import { useChartStore } from "@/lib/store/chart-store";
+import { useCartStore } from "@/lib/store/cart-store";
 import { formatRupiah } from "@/lib/utils";
-import { reservationApi } from "@/features/reservations/reservation-api";
-import { paymentApi } from "@/features/payments/payment-api";
+import { useCreateCheckout } from "@/features/reservations/use-reservation";
 import type { BankCode, PaymentMethod } from "@/features/payments/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,28 +45,35 @@ type CheckoutFormValues = {
 };
 
 export default function CheckoutPage() {
-  const items = useChartStore((state) => state.items);
-  const removeItem = useChartStore((state) => state.removeItem);
+  const items = useCartStore((state) => state.items);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const resetItem = useCartStore((state) => state.reset);
   const router = useRouter();
   const {
     control,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CheckoutFormValues>({
     defaultValues: { method: "va", bank: "bca" },
   });
   const method = useWatch({ control, name: "method" });
+  const stay = useWatch({ control, name: "stay" });
   const selectedRoom = items[0];
   const hasMultipleRooms = items.length > 1;
-  const total = useMemo(
+  const subtotal = useMemo(
     () => items.reduce((sum, room) => sum + room.base_price, 0),
     [items],
   );
+  const nights =
+    stay?.from && stay?.to ? differenceInDays(stay.to, stay.from) : 0;
+  const total = useMemo(() => subtotal * (nights > 0 ? nights : 0), [nights]);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const submitCheckout = async (values: CheckoutFormValues) => {
+  const createCheckoutMutation = useCreateCheckout();
+
+  const submitCheckout = (values: CheckoutFormValues) => {
     if (!selectedRoom) return;
     if (hasMultipleRooms) {
       setError("stay", {
@@ -84,27 +90,28 @@ export default function CheckoutPage() {
       return;
     }
 
-    try {
-      const reservation = await reservationApi.createCheckout({
-        room_type_id: selectedRoom.id,
-        check_in: format(values.stay.from, "yyyy-MM-dd"),
-        check_out: format(values.stay.to, "yyyy-MM-dd"),
-      });
-      const payment = await paymentApi.create({
-        reservation_id: reservation.data.id,
+    createCheckoutMutation.mutate(
+      {
+        roomTypeId: selectedRoom.id,
+        stay: { from: values.stay.from, to: values.stay.to },
         method: values.method,
-        ...(values.method === "va" ? { bank: values.bank } : {}),
-      });
-
-      router.push(`/guest/pay/${payment.data.id}`);
-    } catch (error) {
-      toast.error("Pembayaran belum dapat dibuat", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "Pesanan tidak dapat dibuat.",
-      });
-    }
+        bank: values.bank,
+      },
+      {
+        onSuccess: (payment) => {
+          router.push(`/guest/pay/${payment.data.id}`);
+          resetItem();
+        },
+        onError: (error) => {
+          toast.error("Pembayaran belum dapat dibuat", {
+            description:
+              error instanceof Error
+                ? error.message
+                : "Pesanan tidak dapat dibuat.",
+          });
+        },
+      },
+    );
   };
 
   if (!selectedRoom) {
@@ -312,10 +319,12 @@ export default function CheckoutPage() {
 
             <Button
               type="submit"
-              disabled={isSubmitting || hasMultipleRooms}
+              disabled={createCheckoutMutation.isPending || hasMultipleRooms}
               className="mt-8 h-12 w-full rounded-full px-5 sm:h-11"
             >
-              {isSubmitting ? "Membuat pembayaran..." : "Lanjut ke pembayaran"}
+              {createCheckoutMutation.isPending
+                ? "Membuat pembayaran..."
+                : "Lanjut ke pembayaran"}
               <span className="flex size-7 items-center justify-center rounded-full bg-primary-foreground/15 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/button:translate-x-0.5">
                 <IconArrowRight className="size-4" stroke={1.6} />
               </span>
@@ -370,7 +379,13 @@ export default function CheckoutPage() {
               ))}
             </div>
             <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5">
-              <span className="text-sm text-muted-foreground">Harga dasar</span>
+              <span className="text-sm text-muted-foreground">Subtotal</span>
+              <span className="text-lg font-semibold tracking-tight">
+                {formatRupiah(subtotal)}
+              </span>
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Total</span>
               <span className="text-lg font-semibold tracking-tight">
                 {formatRupiah(total)}
               </span>

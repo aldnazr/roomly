@@ -8,7 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useChartStore } from "@/lib/store/chart-store";
+import { useCartStore } from "@/lib/store/cart-store";
 import { formatRupiah } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "./ui/badge";
@@ -32,8 +32,8 @@ import {
 } from "./ui/sheet";
 
 export function CartButton() {
-  const items = useChartStore((state) => state.items);
-  const removeItem = useChartStore((state) => state.removeItem);
+  const items = useCartStore((state) => state.items);
+  const removeItem = useCartStore((state) => state.removeItem);
   const [open, setOpen] = useState(false);
   const isMobile = useIsMobile();
   const isEmpty = items.length === 0;

@@ -28,6 +28,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { useCartStore } from "@/lib/store/cart-store";
+import { AUTH_EVENT, broadcastAuthEvent } from "@/lib/auth/auth-channel";
 
 export function GuestHeader() {
   const { status } = useSession();
@@ -97,7 +99,11 @@ function GuestProfile() {
         <DropdownMenuGroup>
           <DropdownMenuItem
             variant="destructive"
-            onClick={() => signOut({ redirectTo: "/login" })}
+            onClick={() => {
+              broadcastAuthEvent(AUTH_EVENT.LOGOUT);
+              (signOut({ redirectTo: "/login" }),
+                useCartStore.persist.clearStorage());
+            }}
           >
             Log out
             <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>

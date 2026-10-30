@@ -15,7 +15,7 @@ import { isRoomId } from "@/features/room/room-id";
 import { usePublicRoom } from "@/features/room/use-public-room";
 import { useSession } from "next-auth/react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useChartStore } from "@/lib/store/chart-store";
+import { useCartStore } from "@/lib/store/cart-store";
 import { toast } from "sonner";
 
 const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
@@ -66,7 +66,7 @@ export default function GuestRoomDetailPage() {
   const { data: userData } = useSession();
   const isGuest = userData?.user.role?.toLowerCase() === "guest";
   const isMobile = useIsMobile();
-  const setChart = useChartStore((s) => s.addItem);
+  const setChart = useCartStore((s) => s.addItem);
   const handleClick = () => {
     if (!room) return;
     setChart(room);

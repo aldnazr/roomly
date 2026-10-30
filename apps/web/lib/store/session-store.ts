@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-interface SessionState {
+type SessionState = {
   open: boolean;
   showSessionExpired: () => void;
   hideSessionExpired: () => void;
-}
+};
 
 export const useSessionStore = create<SessionState>()((set) => ({
   open: false,

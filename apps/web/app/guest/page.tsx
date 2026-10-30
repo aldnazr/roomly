@@ -1,7 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { RoomList } from "@/features/room/components/room-list";
 import type { RoomListCopy } from "@/features/room/components/room-list";
 import { RoomListSkeleton } from "@/features/room/components/room-list-skeleton";

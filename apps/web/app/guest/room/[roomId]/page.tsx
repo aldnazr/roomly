@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  IconArrowLeft,
-  IconShoppingBag,
-  IconShoppingBagPlus,
-} from "@tabler/icons-react";
+import { IconArrowLeft, IconShoppingBagPlus } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   RoomDetail,
@@ -19,6 +15,8 @@ import { isRoomId } from "@/features/room/room-id";
 import { usePublicRoom } from "@/features/room/use-public-room";
 import { useSession } from "next-auth/react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useChartStore } from "@/lib/store/chart-store";
+import { toast } from "sonner";
 
 const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
   aboutTitle: "Tentang kamar ini",
@@ -66,8 +64,17 @@ export default function GuestRoomDetailPage() {
   );
   const room = data?.data;
   const { data: userData } = useSession();
-  let isGuest = userData?.user.role?.toLowerCase() === "guest";
+  const isGuest = userData?.user.role?.toLowerCase() === "guest";
   const isMobile = useIsMobile();
+  const setChart = useChartStore((s) => s.addItem);
+  const handleClick = () => {
+    if (!room) return;
+    setChart(room);
+    toast.success("Kamar Ditambahkan", {
+      description: "Kamar berhasil ditambahkan ke keranjang.",
+      position: "top-center",
+    });
+  };
 
   if (isLoading) {
     return <RoomDetailSkeleton label="Memuat detail kamar" />;
@@ -78,7 +85,7 @@ export default function GuestRoomDetailPage() {
       <div className="flex items-center justify-between">
         <BackToCatalog />
         {isGuest && (
-          <Button size={isMobile ? "icon" : "default"}>
+          <Button size={isMobile ? "icon" : "default"} onClick={handleClick}>
             <IconShoppingBagPlus className="size-4 md:size-4.5" />{" "}
             <span className="hidden md:block">Checkout</span>
           </Button>

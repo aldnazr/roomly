@@ -85,7 +85,7 @@ function GuestProfile() {
   }
 
   const data: Array<typeData> = [
-    { name: "Profile", shortcut: "⇧⌘P", url: "/profile" },
+    { name: "Profile", shortcut: "⇧⌘P", url: "/guest/profile" },
     { name: "History", shortcut: "⇧⌘H", url: "/guest/history" },
   ];
 

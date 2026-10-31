@@ -7,12 +7,22 @@ export const historyKeys = {
   guest: () => [...historyKeys.all, "guest"] as const,
 };
 
-export const useHistoryAdmin = useQuery({
-  queryKey: historyKeys.admin(),
-  queryFn: historyApi.admin,
-});
+type HistoryQueryOptions = {
+  enabled?: boolean;
+};
 
-export const useHistoryGuest = useQuery({
-  queryKey: historyKeys.guest(),
-  queryFn: historyApi.guest,
-});
+export function useHistoryAdmin({ enabled = true }: HistoryQueryOptions = {}) {
+  return useQuery({
+    queryKey: historyKeys.admin(),
+    queryFn: historyApi.admin,
+    enabled,
+  });
+}
+
+export function useHistoryGuest({ enabled = true }: HistoryQueryOptions = {}) {
+  return useQuery({
+    queryKey: historyKeys.guest(),
+    queryFn: historyApi.guest,
+    enabled,
+  });
+}

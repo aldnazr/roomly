@@ -10,6 +10,7 @@ import { NavUser } from "./nav-user";
 import {
   IconDashboard,
   IconDoor,
+  IconHistory,
   IconUser,
   IconUsers,
 } from "@tabler/icons-react";
@@ -38,6 +39,11 @@ export function AppSidebar() {
       title: "Role",
       url: "/role",
       icon: IconUsers,
+    },
+    {
+      title: "History",
+      url: "/history",
+      icon: IconHistory,
     },
   ];
 

@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { logout } from "@/lib/auth/logout";
+import da from "zod/v4/locales/da.cjs";
 
 export function GuestHeader() {
   const { status } = useSession();
@@ -77,6 +78,17 @@ export function GuestHeader() {
 }
 
 function GuestProfile() {
+  interface typeData {
+    name: string;
+    shortcut: string;
+    url: string;
+  }
+
+  const data: Array<typeData> = [
+    { name: "Profile", shortcut: "⇧⌘P", url: "/profile" },
+    { name: "History", shortcut: "⇧⌘H", url: "/guest/history" },
+  ];
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -89,10 +101,18 @@ function GuestProfile() {
       <DropdownMenuContent className="w-40" align="start">
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
+          {data.map((e) => (
+            <DropdownMenuItem
+              key={e.name}
+              nativeButton={false}
+              render={
+                <Link href={e.url}>
+                  {e.name}
+                  <DropdownMenuShortcut>{e.shortcut}</DropdownMenuShortcut>
+                </Link>
+              }
+            ></DropdownMenuItem>
+          ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

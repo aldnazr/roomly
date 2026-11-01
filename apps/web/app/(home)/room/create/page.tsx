@@ -223,7 +223,7 @@ export function RoomCreate({ roomId }: { roomId?: string } = {}) {
   }
 
   return (
-    <div className="w-full py-6 sm:py-8 px-4 sm:px-6">
+    <>
       <div className="mb-6 sm:mb-8 max-w-3xl mx-auto">
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
           {isEdit ? "Update Room Type" : "Create Room"}
@@ -580,6 +580,6 @@ export function RoomCreate({ roomId }: { roomId?: string } = {}) {
           </div>
         </form>
       </Card>
-    </div>
+    </>
   );
 }

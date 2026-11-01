@@ -12,6 +12,7 @@ import { isRoomId } from "@/features/room/room-id";
 import { useRoomDetail } from "@/features/room/use-room";
 import { IconArrowLeft, IconEdit } from "@tabler/icons-react";
 import { useParams, useRouter } from "next/navigation";
+import { BackButton } from "@/components/back-button";
 
 export default function RoomDetailPage() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -30,10 +31,7 @@ export default function RoomDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={router.back}>
-          <IconArrowLeft className="size-4" />
-          Back to rooms
-        </Button>
+        <BackButton text="Back to rooms" />
         {hasPermission && knownRoom && (
           <Button
             size={"lg"}

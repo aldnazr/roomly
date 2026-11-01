@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { HeroSection } from "@/components/hero-section";
 import {
   Card,
   CardContent,
@@ -178,13 +179,10 @@ export default function UserDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="relative overflow-hidden rounded-4xl bg-card p-6 shadow-sm ring-1 ring-foreground/5 sm:p-8">
-        <div
-          className="pointer-events-none absolute -right-16 -top-28 size-72 rounded-full bg-primary/10 blur-3xl"
-          aria-hidden="true"
-        />
-        <div className="relative grid gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-          <div className="max-w-2xl">
+      <HeroSection
+        glowClassName="-right-16 -top-28"
+        leftChildren={
+          <>
             <Button
               variant="ghost"
               size="sm"
@@ -206,8 +204,9 @@ export default function UserDetailPage() {
                 ? "Perbarui identitas dan tingkat akses pengguna tanpa mengubah alur kerja tim."
                 : "Buat akun baru dan tetapkan akses yang tepat sejak hari pertama."}
             </p>
-          </div>
-
+          </>
+        }
+        rightChildren={
           <div className="flex items-center gap-3 rounded-3xl bg-muted/60 p-3 pr-5 ring-1 ring-foreground/5">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-card text-lg font-semibold text-primary ring-1 ring-foreground/5">
               {isEditing ? (
@@ -229,8 +228,8 @@ export default function UserDetailPage() {
               </p>
             </div>
           </div>
-        </div>
-      </section>
+        }
+      />
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="animate-in rounded-4xl bg-muted/50 p-1 ring-1 ring-foreground/5 fade-in slide-in-from-bottom-4 animation-duration-[800ms] fill-mode-[both] [animation-timing-function:cubic-bezier(0.22,1,0.36,1)]">

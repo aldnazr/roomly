@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { HeroSection } from "@/components/hero-section";
 import { RoomList } from "@/features/room/components/room-list";
 import { RoomListSkeleton } from "@/features/room/components/room-list-skeleton";
 import { useRoom } from "@/features/room/use-room";
@@ -12,23 +13,20 @@ export default function RoomPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Rooms
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Browse and manage room inventory, capacity, and nightly rates.
-          </p>
-        </div>
-        <Button
-          size={"lg"}
-          nativeButton={false}
-          render={<Link href={"/room/create"} />}
-        >
-          Create Room
-        </Button>
-      </div>
+      <HeroSection
+        eyebrow="manajemen kamar"
+        title="Rooms"
+        description="Browse and manage room inventory, capacity, and nightly rates."
+        rightChildren={
+          <Button
+            size={"lg"}
+            nativeButton={false}
+            render={<Link href={"/room/create"} />}
+          >
+            Buat Kamar
+          </Button>
+        }
+      />
 
       {isLoading ? (
         <RoomListSkeleton />

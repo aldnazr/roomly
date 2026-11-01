@@ -1,6 +1,7 @@
 "use client";
 
 import { PermissionGuard } from "@/components/permission-guard";
+import { HeroSection } from "@/components/hero-section";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,25 +31,12 @@ export default function UserPage() {
   return (
     <PermissionGuard permission="staff.manage">
       <div className="flex flex-col gap-6">
-        <section className="relative overflow-hidden rounded-4xl bg-card p-6 shadow-sm ring-1 ring-foreground/5 sm:p-8">
-          <div
-            className="pointer-events-none absolute -right-16 -top-28 size-72 rounded-full bg-primary/10 blur-3xl"
-            aria-hidden="true"
-          />
-          <div className="relative grid gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-            <div className="max-w-2xl">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                Direktori tim
-              </p>
-              <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-                Pengguna
-              </h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Kelola akun tim, identitas, dan role yang terhubung ke setiap
-                pengguna Roomly.
-              </p>
-            </div>
-
+        <HeroSection
+          glowClassName="-right-16 -top-28"
+          eyebrow="Direktori tim"
+          title="Pengguna"
+          description="Kelola akun tim, identitas, dan role yang terhubung ke setiap pengguna Roomly."
+          rightChildren={
             <Button
               size="lg"
               render={<Link href="/user/create" />}
@@ -62,8 +50,8 @@ export default function UserPage() {
               />
               Tambah pengguna
             </Button>
-          </div>
-        </section>
+          }
+        />
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex items-center gap-3 rounded-3xl bg-muted/50 p-4 ring-1 ring-foreground/5">

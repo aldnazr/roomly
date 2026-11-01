@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { HeroSection } from "@/components/hero-section";
 import { InsetCard } from "@/components/inset-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -56,20 +57,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <InsetCard as="section">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              Front Desk Console
-            </p>
-            <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-              Selamat bertugas, {greetingName}
-            </h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Pantau kedatangan dan keberangkatan tamu hari ini, serta status
-              kamar operasional.
-            </p>
-          </div>
+      <HeroSection
+        gridClassName="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+        eyebrow="Front Desk Console"
+        title={`Selamat bertugas, ${greetingName}`}
+        description="Pantau kedatangan dan keberangkatan tamu hari ini, serta status kamar operasional."
+        rightChildren={
           <div className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
             <IconCalendar className="size-4" stroke={1.5} aria-hidden="true" />
             <span>
@@ -79,8 +72,8 @@ export default function DashboardPage() {
               )}
             </span>
           </div>
-        </div>
-      </InsetCard>
+        }
+      />
 
       {isLoading && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

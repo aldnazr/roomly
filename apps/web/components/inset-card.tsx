@@ -16,7 +16,7 @@ export function InsetCard({
   return (
     <Component
       className={cn(
-        "rounded-[2rem] bg-muted/40 ring-1 ring-foreground/5",
+        "rounded-[2rem] p-2 bg-muted/40 ring-1 ring-foreground/5",
         className,
       )}
       {...props}

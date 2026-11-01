@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { InsetCard } from "@/components/inset-card";
+import { BackButton } from "@/components/back-button";
 
 type CheckoutFormValues = {
   stay?: DateRange;
@@ -127,14 +128,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl py-4 sm:py-8">
-      <Button
-        variant="ghost"
-        className="h-11 px-2 sm:h-9"
-        onClick={router.back}
-      >
-        <IconArrowLeft className="size-4" stroke={1.6} /> Kembali ke katalog
-      </Button>
+    <div className="mx-auto max-w-5xl">
+      <BackButton text="Kembali ke katalog" />
 
       <div className="mb-8 max-w-xl">
         <h1 className="mt-4 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
@@ -147,10 +142,7 @@ export default function CheckoutPage() {
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(19rem,0.8fr)]">
-        <form
-          onSubmit={handleSubmit(submitCheckout)}
-          className="rounded-[2rem] bg-muted/60 p-1.5 ring-1 ring-foreground/5"
-        >
+        <form onSubmit={handleSubmit(submitCheckout)}>
           <InsetCard>
             <div className="mb-7">
               <h2 className="text-lg font-semibold tracking-tight">
@@ -316,22 +308,19 @@ export default function CheckoutPage() {
           </InsetCard>
         </form>
 
-        <aside className="rounded-[2rem] bg-foreground/4.5 p-1.5 ring-1 ring-foreground/5 lg:sticky lg:top-20">
+        <aside>
           <InsetCard>
             <div className="flex items-baseline justify-between gap-4">
               <h2 className="text-lg font-semibold tracking-tight">
                 Ringkasan pesanan
               </h2>
-              {/* <span className="text-xs text-muted-foreground">
-                {room.length} kamar
-              </span> */}
             </div>
             <div className="mt-5 space-y-4">
               <div className="flex gap-3 border-b border-border/60 pb-4 last:border-0 last:pb-0">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground">{room.name}</p>
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {room.amenities.slice(0, 3).map((amenity) => (
+                    {room.amenities.map((amenity) => (
                       <Badge key={amenity}>{amenity}</Badge>
                     ))}
                   </div>

@@ -7,7 +7,7 @@ interface DevSimulatePanelProps {
 }
 
 export function DevSimulatePanel({ onSimulate }: DevSimulatePanelProps) {
-  if (process.env.NODE_ENV === "production" || !onSimulate) return null;
+  if (!onSimulate) return null;
 
   return (
     <div className="rounded-lg border border-dashed p-4 space-y-2">

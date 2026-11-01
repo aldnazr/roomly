@@ -17,7 +17,7 @@ import { useSession } from "next-auth/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCartStore } from "@/lib/store/cart-store";
 import { toast } from "sonner";
-import { CartButton } from "@/components/cart-button";
+import { BackButton } from "@/components/back-button";
 
 const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
   aboutTitle: "Tentang kamar ini",
@@ -42,20 +42,6 @@ const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
   hideErrorDetail: true,
   hideRetryOnNotFound: true,
 };
-
-function BackToCatalog() {
-  const router = useRouter();
-  return (
-    <Button
-      variant="ghost"
-      onClick={router.back}
-      className="h-11 px-2 sm:h-9 sm:px-3"
-    >
-      <IconArrowLeft className="size-4" />
-      Kembali ke daftar kamar
-    </Button>
-  );
-}
 
 export default function GuestRoomDetailPage() {
   const router = useRouter();
@@ -82,11 +68,11 @@ export default function GuestRoomDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <BackToCatalog />
+        <BackButton text="Kembali ke daftar kamar" />
         {isGuest && (
           <Button size={isMobile ? "icon" : "lg"} onClick={handleClick}>
             <IconShoppingBagPlus className="size-4 md:size-5" />{" "}
-            <span className="hidden md:block">Checkout</span>
+            <span className="hidden md:block">Pesan Sekarang</span>
           </Button>
         )}
       </div>

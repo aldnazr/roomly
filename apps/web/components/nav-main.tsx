@@ -32,9 +32,9 @@ export function NavMain({
               <SidebarMenuButton
                 tooltip={item.title}
                 isActive={
-                  item.url === "/" ?
-                    pathname === item.url
-                  : pathname.startsWith(item.url)
+                  item.url === "/"
+                    ? pathname === item.url
+                    : pathname.startsWith(item.url)
                 }
                 render={
                   <Link href={item.url}>
@@ -42,6 +42,7 @@ export function NavMain({
                     <span>{item.title}</span>
                   </Link>
                 }
+                className="h-10 text-[16px] px-4"
               ></SidebarMenuButton>
             </SidebarMenuItem>
           ))}

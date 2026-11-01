@@ -80,7 +80,7 @@ export default function GuestPage() {
     return (
       <div className="space-y-6">
         <div className="rounded-[2rem] bg-muted/40 p-2 ring-1 ring-foreground/5">
-          <div className="rounded-[calc(2rem-0.5rem)] bg-card p-6">
+          <div className="rounded-[1.5rem] bg-card p-6">
             <SkeletonBlock />
           </div>
         </div>
@@ -102,9 +102,6 @@ export default function GuestPage() {
     return (
       <div className="space-y-8">
         <section>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            Guest Hub
-          </p>
           <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
             Reservasi aktif Anda
           </h1>
@@ -115,7 +112,7 @@ export default function GuestPage() {
         </section>
 
         <section className="rounded-[2rem] bg-muted/40 p-2 ring-1 ring-foreground/5 sm:p-3">
-          <div className="rounded-[calc(2rem-0.5rem)] bg-card p-6 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-8">
+          <div className="rounded-[1.5rem] bg-card p-6 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
@@ -242,9 +239,6 @@ export default function GuestPage() {
     <div className="space-y-8">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            Guest Hub
-          </p>
           <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
             Reservasi sekarang
           </h1>
@@ -255,24 +249,19 @@ export default function GuestPage() {
         </div>
       </section>
 
-      <section
-        id="katalog"
-        className="rounded-[2rem] bg-muted/40 p-2 ring-1 ring-foreground/5 sm:p-3"
-      >
-        <div className="rounded-[calc(2rem-0.5rem)] bg-card p-5 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-6">
-          {roomsLoading ? (
-            <RoomListSkeleton />
-          ) : (
-            <RoomList
-              rooms={rooms}
-              isError={isError}
-              error={error}
-              onRetry={() => refetch()}
-              hrefBase="/guest/room"
-              copy={GUEST_ROOM_LIST_COPY}
-            />
-          )}
-        </div>
+      <section id="katalog">
+        {roomsLoading ? (
+          <RoomListSkeleton />
+        ) : (
+          <RoomList
+            rooms={rooms}
+            isError={isError}
+            error={error}
+            onRetry={() => refetch()}
+            hrefBase="/guest/room"
+            copy={GUEST_ROOM_LIST_COPY}
+          />
+        )}
       </section>
     </div>
   );

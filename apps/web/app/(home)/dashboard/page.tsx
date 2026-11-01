@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { InsetCard } from "@/components/ui/inset-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCheckInReservation,
@@ -55,37 +56,35 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] bg-muted/40 p-2 ring-1 ring-foreground/5 sm:p-3">
-        <div className="rounded-[1.5rem] bg-card p-6 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                Front Desk Console
-              </p>
-              <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-                Selamat bertugas, {greetingName}
-              </h1>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                Pantau kedatangan dan keberangkatan tamu hari ini, serta status
-                kamar operasional.
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
-              <IconCalendar
-                className="size-4"
-                stroke={1.5}
-                aria-hidden="true"
-              />
-              <span>
-                {formatDate(
-                  operations?.date ?? new Date().toISOString().slice(0, 10),
-                  "EEEE, dd MMMM yyyy",
-                )}
-              </span>
-            </div>
+      <InsetCard as="section">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              Front Desk Console
+            </p>
+            <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
+              Selamat bertugas, {greetingName}
+            </h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+              Pantau kedatangan dan keberangkatan tamu hari ini, serta status
+              kamar operasional.
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
+            <IconCalendar
+              className="size-4"
+              stroke={1.5}
+              aria-hidden="true"
+            />
+            <span>
+              {formatDate(
+                operations?.date ?? new Date().toISOString().slice(0, 10),
+                "EEEE, dd MMMM yyyy",
+              )}
+            </span>
           </div>
         </div>
-      </section>
+      </InsetCard>
 
       {isLoading && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -96,23 +95,21 @@ export default function DashboardPage() {
       )}
 
       {isError && !isLoading && (
-        <div className="rounded-[2rem] bg-muted/40 p-2 ring-1 ring-foreground/5">
-          <div className="rounded-[calc(2rem-0.5rem)] bg-card p-6 text-center">
-            <p className="font-medium text-destructive">
-              Gagal memuat data operasional
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Periksa koneksi server, lalu coba lagi.
-            </p>
-            <Button
-              className="mt-4 rounded-full"
-              variant="outline"
-              onClick={() => refetch()}
-            >
-              Coba lagi
-            </Button>
-          </div>
-        </div>
+        <InsetCard innerClassName="p-6 text-center">
+          <p className="font-medium text-destructive">
+            Gagal memuat data operasional
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Periksa koneksi server, lalu coba lagi.
+          </p>
+          <Button
+            className="mt-4 rounded-full"
+            variant="outline"
+            onClick={() => refetch()}
+          >
+            Coba lagi
+          </Button>
+        </InsetCard>
       )}
 
       {!isLoading && !isError && stats && (
@@ -143,37 +140,35 @@ export default function DashboardPage() {
               hint: "Unit tersedia",
             },
           ].map((card) => (
-            <div
+            <InsetCard
               key={card.label}
-              className="rounded-[2rem] bg-muted/40 p-1.5 ring-1 ring-foreground/5"
+              className="p-1.5 sm:p-1.5"
+              innerClassName="rounded-[calc(2rem-6px)] p-5 sm:p-5"
             >
-              <div className="rounded-[calc(2rem-6px)] bg-card p-5 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)]">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {card.label}
-                  </p>
-                  <card.icon
-                    className="size-4 text-muted-foreground"
-                    stroke={1.5}
-                    aria-hidden="true"
-                  />
-                </div>
-                <p className="mt-3 font-heading text-3xl font-semibold tracking-tight tabular-nums">
-                  {card.value}
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {card.label}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {card.hint}
-                </p>
+                <card.icon
+                  className="size-4 text-muted-foreground"
+                  stroke={1.5}
+                  aria-hidden="true"
+                />
               </div>
-            </div>
+              <p className="mt-3 font-heading text-3xl font-semibold tracking-tight tabular-nums">
+                {card.value}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {card.hint}
+              </p>
+            </InsetCard>
           ))}
         </section>
       )}
 
       {!isLoading && !isError && (
-        <section className="rounded-[2rem] bg-muted/40 p-2 ring-1 ring-foreground/5 sm:p-3">
-          <div className="rounded-[calc(2rem-0.5rem)] bg-card p-5 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-6">
-            <div className="mb-5 flex flex-wrap gap-2">
+        <InsetCard as="section" innerClassName="p-5 sm:p-6">
+          <div className="mb-5 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => setActiveTab("checkin")}
@@ -310,8 +305,7 @@ export default function DashboardPage() {
                 )}
               </div>
             )}
-          </div>
-        </section>
+        </InsetCard>
       )}
     </div>
   );

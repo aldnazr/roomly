@@ -81,7 +81,7 @@ export function RoomList({
         <p className="text-sm font-medium text-destructive">
           {text.errorTitle}
         </p>
-        <p className="mt-1 max-w-md text-xs text-muted-foreground">
+        <p className="mt-1 sm:max-w-md text-xs text-muted-foreground">
           {text.hideErrorDetail
             ? text.errorDescription
             : error?.message || text.errorDescription}
@@ -118,7 +118,7 @@ export function RoomList({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mx-auto max-w-sm sm:max-w-2xl lg:max-w-full grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {rooms.map((room) => {
         const photo = photoUrl(room.photos);
         return (

@@ -1,6 +1,6 @@
 import type { AuthUser } from "../auth/middleware";
 import { searchAvailability } from "../availability/service";
-import { query, queryOne } from "../db";
+import { exec, query, queryOne } from "../db";
 import { HttpError } from "../errors";
 import type { CreateCheckoutReservationInput } from "./schema";
 
@@ -236,6 +236,195 @@ export async function listReservations(user: AuthUser): Promise<ReservationHisto
 
   const rows = await query<ReservationHistoryRow>(sql, params);
   return rows.map(mapReservationHistoryRow);
+}
+
+export type DailyOperationItem = {
+  id: string;
+  guest_name: string | null;
+  guest_email: string | null;
+  guest_phone: string | null;
+  room_type_name: string | null;
+  room_number: string | null;
+  check_in: string;
+  check_out: string;
+  status: string;
+  total_price: number;
+  paid_at: string | null;
+};
+
+export type DailyOperationsDto = {
+  date: string;
+  stats: {
+    total_check_ins: number;
+    total_check_outs: number;
+    occupied_rooms: number;
+    available_rooms: number;
+  };
+  check_ins: DailyOperationItem[];
+  check_outs: DailyOperationItem[];
+};
+
+function mapDailyOperationRow(row: ReservationHistoryRow): DailyOperationItem {
+  return {
+    id: String(row.id),
+    guest_name: row.guest_name,
+    guest_email: row.guest_email,
+    guest_phone: row.guest_phone,
+    room_type_name: row.room_type_name,
+    room_number: row.room_number,
+    check_in: row.check_in,
+    check_out: row.check_out,
+    status: row.status,
+    total_price: row.total_price,
+    paid_at: row.paid_at,
+  };
+}
+
+export async function getDailyOperations(date: string): Promise<DailyOperationsDto> {
+  const checkInRows = await query<ReservationHistoryRow>(
+    `${RESERVATION_HISTORY_BASE} WHERE r.check_in = ? AND r.status IN ('confirmed', 'pending_payment') ORDER BY r.id DESC`,
+    [date],
+  );
+  const checkOutRows = await query<ReservationHistoryRow>(
+    `${RESERVATION_HISTORY_BASE} WHERE r.check_out = ? AND r.status = 'checked_in' ORDER BY r.id DESC`,
+    [date],
+  );
+  const statsRow = await queryOne<{ occupied_rooms: number; available_rooms: number }>(
+    "SELECT (SELECT COUNT(*) FROM rooms WHERE status = 'occupied') AS occupied_rooms, (SELECT COUNT(*) FROM rooms WHERE status = 'available') AS available_rooms",
+  );
+
+  return {
+    date,
+    stats: {
+      total_check_ins: checkInRows.length,
+      total_check_outs: checkOutRows.length,
+      occupied_rooms: statsRow?.occupied_rooms ?? 0,
+      available_rooms: statsRow?.available_rooms ?? 0,
+    },
+    check_ins: checkInRows.map(mapDailyOperationRow),
+    check_outs: checkOutRows.map(mapDailyOperationRow),
+  };
+}
+
+export async function getActiveReservation(user: AuthUser): Promise<ReservationHistoryDto | null> {
+  const email = await getUserEmail(user);
+  if (!email) return null;
+
+  const row = await queryOne<ReservationHistoryRow>(
+    `${RESERVATION_HISTORY_BASE}
+     WHERE g.email = (SELECT email FROM users WHERE id = ? COLLATE NOCASE)
+       AND r.status IN ('pending', 'pending_payment', 'confirmed', 'checked_in')
+     ORDER BY r.created_at DESC, r.id DESC
+     LIMIT 1`,
+    [user.id],
+  );
+
+  if (!row) return null;
+  return mapReservationHistoryRow(row);
+}
+
+export async function cancelReservation(
+  id: number,
+  user: AuthUser,
+  reason?: string,
+): Promise<{ id: string; status: string; cancelled_at: string }> {
+  const row = await queryOne<ReservationHistoryRow>(
+    `${RESERVATION_HISTORY_BASE} WHERE r.id = ?`,
+    [id],
+  );
+  if (!row) throw new HttpError(404, "Reservation not found");
+
+  const email = await getUserEmail(user);
+  const guestRow = await queryOne<{ email: string | null }>(
+    "SELECT email FROM guests WHERE id = ?",
+    [row.guest_id],
+  );
+  const isOwner =
+    !!email && !!guestRow?.email && email.toLowerCase() === guestRow.email.toLowerCase();
+  const canManage = await hasPermission(user, "bookings.view_all");
+
+  if (!isOwner && !canManage) throw new HttpError(403, "Access denied to this reservation");
+
+  if (!["pending", "pending_payment", "confirmed"].includes(row.status)) {
+    throw new HttpError(409, "Reservation cannot be cancelled in its current status");
+  }
+
+  if (row.check_in < new Date().toISOString().slice(0, 10)) {
+    throw new HttpError(400, "Reservation check-in date has passed");
+  }
+
+  const updated = await queryOne<{ id: number; status: string }>(
+    `UPDATE reservations
+     SET status = 'cancelled'
+     WHERE id = ?
+       AND status IN ('pending', 'pending_payment', 'confirmed')
+     RETURNING id, status`,
+    [id],
+  );
+  if (!updated) throw new HttpError(409, "Reservation cannot be cancelled in its current status");
+
+  return {
+    id: String(updated.id),
+    status: updated.status,
+    cancelled_at: new Date().toISOString(),
+  };
+}
+
+export async function checkInReservation(id: number, user: AuthUser) {
+  if (!(await hasPermission(user, "bookings.check_in"))) {
+    throw new HttpError(403, "Insufficient permissions");
+  }
+
+  const reservation = await queryOne<{ id: number; room_id: string | null; status: string }>(
+    "SELECT id, room_id, status FROM reservations WHERE id = ?",
+    [id],
+  );
+  if (!reservation) throw new HttpError(404, "Reservation not found");
+  if (reservation.status !== "confirmed") {
+    throw new HttpError(409, "Reservation is not ready for check-in");
+  }
+  if (!reservation.room_id) {
+    throw new HttpError(409, "No room assigned to this reservation");
+  }
+
+  await queryOne<{ id: number }>(
+    "UPDATE reservations SET status = 'checked_in' WHERE id = ? AND status = 'confirmed' RETURNING id",
+    [id],
+  );
+  await exec(
+    "UPDATE rooms SET status = 'occupied' WHERE id = ?",
+    [reservation.room_id],
+  );
+
+  return { id: String(id), status: "checked_in" };
+}
+
+export async function checkOutReservation(id: number, user: AuthUser) {
+  if (!(await hasPermission(user, "bookings.check_out"))) {
+    throw new HttpError(403, "Insufficient permissions");
+  }
+
+  const reservation = await queryOne<{ id: number; room_id: string | null; status: string }>(
+    "SELECT id, room_id, status FROM reservations WHERE id = ?",
+    [id],
+  );
+  if (!reservation) throw new HttpError(404, "Reservation not found");
+  if (reservation.status !== "checked_in") {
+    throw new HttpError(409, "Reservation is not currently checked in");
+  }
+
+  await queryOne<{ id: number }>(
+    "UPDATE reservations SET status = 'checked_out' WHERE id = ? AND status = 'checked_in' RETURNING id",
+    [id],
+  );
+  if (reservation.room_id) {
+    await exec(
+      "UPDATE rooms SET status = 'maintenance' WHERE id = ?",
+      [reservation.room_id],
+    );
+  }
+
+  return { id: String(id), status: "checked_out" };
 }
 
 export async function getReservation(

@@ -31,6 +31,11 @@ export const API_ENDPOINTS = {
   },
   reservation: {
     checkout: "/api/reservations/checkout",
+    dailyOperations: "/api/reservations/daily-operations",
+    active: "/api/reservations/active",
+    cancel: (id: string) => `/api/reservations/${id}/cancel`,
+    checkIn: (id: string) => `/api/reservations/${id}/check-in`,
+    checkOut: (id: string) => `/api/reservations/${id}/check-out`,
   },
   payment: {
     create: "/api/payments",

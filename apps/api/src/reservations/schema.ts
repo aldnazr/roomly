@@ -29,6 +29,12 @@ export const createCheckoutReservationSchema = z
     }
   });
 
+export const cancelReservationSchema = z
+  .object({
+    reason: z.string().max(255).optional(),
+  })
+  .strict();
+
 export type CreateCheckoutReservationInput = z.infer<
   typeof createCheckoutReservationSchema
 >;

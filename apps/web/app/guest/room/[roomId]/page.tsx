@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { IconArrowLeft, IconShoppingBagPlus } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,7 @@ import { useSession } from "next-auth/react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCartStore } from "@/lib/store/cart-store";
 import { toast } from "sonner";
+import { CartButton } from "@/components/cart-button";
 
 const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
   aboutTitle: "Tentang kamar ini",
@@ -43,11 +44,11 @@ const GUEST_ROOM_DETAIL_COPY: RoomDetailCopy = {
 };
 
 function BackToCatalog() {
+  const router = useRouter();
   return (
     <Button
       variant="ghost"
-      nativeButton={false}
-      render={<Link href={"/guest"} />}
+      onClick={router.back}
       className="h-11 px-2 sm:h-9 sm:px-3"
     >
       <IconArrowLeft className="size-4" />
@@ -57,6 +58,7 @@ function BackToCatalog() {
 }
 
 export default function GuestRoomDetailPage() {
+  const router = useRouter();
   const { roomId } = useParams<{ roomId: string }>();
   const knownRoom = isRoomId(roomId);
   const { data, isLoading, isError, error, refetch } = usePublicRoom(
@@ -70,10 +72,7 @@ export default function GuestRoomDetailPage() {
   const handleClick = () => {
     if (!room) return;
     setChart(room);
-    toast.success("Kamar Ditambahkan", {
-      description: "Kamar berhasil ditambahkan ke keranjang.",
-      position: "top-center",
-    });
+    router.push("/guest/checkout");
   };
 
   if (isLoading) {
@@ -85,8 +84,8 @@ export default function GuestRoomDetailPage() {
       <div className="flex items-center justify-between">
         <BackToCatalog />
         {isGuest && (
-          <Button size={isMobile ? "icon" : "default"} onClick={handleClick}>
-            <IconShoppingBagPlus className="size-4 md:size-4.5" />{" "}
+          <Button size={isMobile ? "icon" : "lg"} onClick={handleClick}>
+            <IconShoppingBagPlus className="size-4 md:size-5" />{" "}
             <span className="hidden md:block">Checkout</span>
           </Button>
         )}

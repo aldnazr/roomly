@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { InsetCard } from "@/components/inset-card";
 
 type CheckoutFormValues = {
   stay?: DateRange;
@@ -45,8 +46,7 @@ type CheckoutFormValues = {
 };
 
 export default function CheckoutPage() {
-  const items = useCartStore((state) => state.items);
-  const removeItem = useCartStore((state) => state.removeItem);
+  const room = useCartStore((state) => state.items);
   const resetItem = useCartStore((state) => state.reset);
   const router = useRouter();
   const {
@@ -59,12 +59,7 @@ export default function CheckoutPage() {
   });
   const method = useWatch({ control, name: "method" });
   const stay = useWatch({ control, name: "stay" });
-  const selectedRoom = items[0];
-  const hasMultipleRooms = items.length > 1;
-  const subtotal = useMemo(
-    () => items.reduce((sum, room) => sum + room.base_price, 0),
-    [items],
-  );
+  const subtotal = room?.base_price ?? 0;
   const nights =
     stay?.from && stay?.to ? differenceInDays(stay.to, stay.from) : 0;
   const total = useMemo(() => subtotal * (nights > 0 ? nights : 0), [nights]);
@@ -74,14 +69,7 @@ export default function CheckoutPage() {
   const createCheckoutMutation = useCreateCheckout();
 
   const submitCheckout = (values: CheckoutFormValues) => {
-    if (!selectedRoom) return;
-    if (hasMultipleRooms) {
-      setError("stay", {
-        type: "validate",
-        message: "Checkout saat ini menerima satu tipe kamar per pembayaran.",
-      });
-      return;
-    }
+    if (!room) return;
     if (!values.stay?.from || !values.stay.to) {
       setError("stay", {
         type: "required",
@@ -92,7 +80,7 @@ export default function CheckoutPage() {
 
     createCheckoutMutation.mutate(
       {
-        roomTypeId: selectedRoom.id,
+        roomTypeId: room.id,
         stay: { from: values.stay.from, to: values.stay.to },
         method: values.method,
         bank: values.bank,
@@ -114,7 +102,7 @@ export default function CheckoutPage() {
     );
   };
 
-  if (!selectedRoom) {
+  if (!room) {
     return (
       <section className="mx-auto flex min-h-[56dvh] max-w-lg flex-col items-center justify-center text-center">
         <div className="rounded-[2rem] bg-muted/70 p-2 ring-1 ring-foreground/5">
@@ -141,18 +129,14 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-5xl py-4 sm:py-8">
       <Button
-        nativeButton={false}
-        render={<Link href="/guest" />}
         variant="ghost"
-        className="mb-7 h-11 px-2 sm:h-9"
+        className="h-11 px-2 sm:h-9"
+        onClick={router.back}
       >
         <IconArrowLeft className="size-4" stroke={1.6} /> Kembali ke katalog
       </Button>
 
       <div className="mb-8 max-w-xl">
-        <p className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-[10px] font-semibold tracking-[0.16em] text-primary uppercase">
-          Checkout
-        </p>
         <h1 className="mt-4 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
           Selesaikan detail perjalanan Anda.
         </h1>
@@ -167,7 +151,7 @@ export default function CheckoutPage() {
           onSubmit={handleSubmit(submitCheckout)}
           className="rounded-[2rem] bg-muted/60 p-1.5 ring-1 ring-foreground/5"
         >
-          <div className="rounded-[1.625rem] bg-card p-5 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-7">
+          <InsetCard>
             <div className="mb-7">
               <h2 className="text-lg font-semibold tracking-tight">
                 Detail pembayaran
@@ -310,16 +294,9 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {hasMultipleRooms && (
-              <p className="mt-6 text-sm leading-6 text-destructive">
-                Checkout saat ini menerima satu tipe kamar per pembayaran. Hapus
-                kamar lain dari ringkasan pesanan.
-              </p>
-            )}
-
             <Button
               type="submit"
-              disabled={createCheckoutMutation.isPending || hasMultipleRooms}
+              disabled={createCheckoutMutation.isPending}
               className="mt-8 h-12 w-full rounded-full px-5 sm:h-11"
             >
               {createCheckoutMutation.isPending
@@ -336,47 +313,33 @@ export default function CheckoutPage() {
               />
               Harga final mengikuti tanggal menginap yang dipilih.
             </div>
-          </div>
+          </InsetCard>
         </form>
 
         <aside className="rounded-[2rem] bg-foreground/4.5 p-1.5 ring-1 ring-foreground/5 lg:sticky lg:top-20">
-          <div className="rounded-[1.625rem] bg-card p-5 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-6">
+          <InsetCard>
             <div className="flex items-baseline justify-between gap-4">
               <h2 className="text-lg font-semibold tracking-tight">
                 Ringkasan pesanan
               </h2>
-              <span className="text-xs text-muted-foreground">
-                {items.length} kamar
-              </span>
+              {/* <span className="text-xs text-muted-foreground">
+                {room.length} kamar
+              </span> */}
             </div>
             <div className="mt-5 space-y-4">
-              {items.map((room, index) => (
-                <div
-                  key={`${room.id}-${index}`}
-                  className="flex gap-3 border-b border-border/60 pb-4 last:border-0 last:pb-0"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-foreground">{room.name}</p>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {room.amenities.slice(0, 3).map((amenity) => (
-                        <Badge key={amenity}>{amenity}</Badge>
-                      ))}
-                    </div>
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      {formatRupiah(room.base_price)} / malam
-                    </p>
+              <div className="flex gap-3 border-b border-border/60 pb-4 last:border-0 last:pb-0">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground">{room.name}</p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {room.amenities.slice(0, 3).map((amenity) => (
+                      <Badge key={amenity}>{amenity}</Badge>
+                    ))}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    type="button"
-                    aria-label={`Hapus ${room.name} dari keranjang`}
-                    onClick={() => removeItem(room.id)}
-                  >
-                    <IconTrash className="size-4" stroke={1.6} />
-                  </Button>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {formatRupiah(room.base_price)} / malam
+                  </p>
                 </div>
-              ))}
+              </div>
             </div>
             <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5">
               <span className="text-sm text-muted-foreground">Subtotal</span>
@@ -390,7 +353,7 @@ export default function CheckoutPage() {
                 {formatRupiah(total)}
               </span>
             </div>
-          </div>
+          </InsetCard>
         </aside>
       </div>
     </div>

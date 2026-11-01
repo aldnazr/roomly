@@ -3,27 +3,24 @@ import { Room } from "@/features/room/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-type chartState = {
-  items: Array<Room>;
+type ChartState = {
+  items: Room | null;
   addItem: (room: Room) => void;
-  removeItem: (roomId: string) => void;
   reset: () => void;
 };
 
-export const useCartStore = create<chartState>()(
+export const useCartStore = create<ChartState>()(
   persist(
     (set) => ({
-      items: [],
-      addItem: (item) => set((state) => ({ items: [...state.items, item] })),
-      removeItem: (roomId) =>
-        set((state) => ({
-          items: [...state.items].filter((room) => room.id !== roomId),
-        })),
-      reset: () =>
-        set((s) => ({
-          items: [],
-        })),
+      items: null,
+      addItem: (item) => set({ items: item }),
+      reset: () => set({ items: null }),
     }),
-    { name: "chart-storage" },
+    {
+      name: "chart-storage",
+      partialize: (state) => ({
+        items: state.items,
+      }),
+    },
   ),
 );

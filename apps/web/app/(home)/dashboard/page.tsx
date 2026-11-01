@@ -12,7 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { InsetCard } from "@/components/ui/inset-card";
+import { InsetCard } from "@/components/inset-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCheckInReservation,
@@ -71,11 +71,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
-            <IconCalendar
-              className="size-4"
-              stroke={1.5}
-              aria-hidden="true"
-            />
+            <IconCalendar className="size-4" stroke={1.5} aria-hidden="true" />
             <span>
               {formatDate(
                 operations?.date ?? new Date().toISOString().slice(0, 10),
@@ -158,9 +154,7 @@ export default function DashboardPage() {
               <p className="mt-3 font-heading text-3xl font-semibold tracking-tight tabular-nums">
                 {card.value}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {card.hint}
-              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{card.hint}</p>
             </InsetCard>
           ))}
         </section>
@@ -169,115 +163,58 @@ export default function DashboardPage() {
       {!isLoading && !isError && (
         <InsetCard as="section" innerClassName="p-5 sm:p-6">
           <div className="mb-5 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab("checkin")}
-                className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
-                  activeTab === "checkin"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Check-in hari ini
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("checkout")}
-                className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
-                  activeTab === "checkout"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Check-out hari ini
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab("checkin")}
+              className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
+                activeTab === "checkin"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Check-in hari ini
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("checkout")}
+              className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${
+                activeTab === "checkout"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Check-out hari ini
+            </button>
+          </div>
 
-            {activeTab === "checkin" && (
-              <div className="space-y-4">
-                {checkIns.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <p className="font-medium">Tidak ada kedatangan hari ini</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Daftar tamu dengan check-in hari ini akan tampil di sini.
-                    </p>
-                  </div>
-                ) : (
-                  <ul className="flex flex-col gap-3">
-                    {checkIns.map((item) => {
-                      const status = reservationStatusMeta(item.status);
-                      return (
-                        <li
-                          key={item.id}
-                          className="rounded-[1.5rem] bg-muted/40 p-1.5 ring-1 ring-foreground/5"
-                        >
-                          <div className="flex flex-col gap-4 rounded-[calc(1.5rem-6px)] bg-background/60 p-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="truncate font-medium">
-                                  {item.guest_name}
-                                </p>
-                                <Badge variant={status.variant}>
-                                  {status.label}
-                                </Badge>
-                              </div>
-                              <p className="mt-1 text-sm text-muted-foreground">
-                                {item.room_type_name}{" "}
-                                {item.room_number
-                                  ? `· Kamar ${item.room_number}`
-                                  : ""}
-                              </p>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {formatDate(item.check_in)} sampai{" "}
-                                {formatDate(item.check_out)} ·{" "}
-                                {formatRupiah(item.total_price)}
-                              </p>
-                            </div>
-                            <Button
-                              className="group/cta rounded-full pr-1.5 pl-5"
-                              onClick={() => handleCheckIn(item.id)}
-                              disabled={checkInMutation.isPending}
-                            >
-                              Proses check-in
-                              <span className="ml-2 flex size-8 items-center justify-center rounded-full bg-primary-foreground/15 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/cta:translate-x-0.5">
-                                <IconArrowRight
-                                  className="size-4"
-                                  stroke={1.5}
-                                />
-                              </span>
-                            </Button>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            )}
-
-            {activeTab === "checkout" && (
-              <div className="space-y-4">
-                {checkOuts.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <p className="font-medium">
-                      Tidak ada keberangkatan hari ini
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Daftar tamu dengan check-out hari ini akan tampil di sini.
-                    </p>
-                  </div>
-                ) : (
-                  <ul className="flex flex-col gap-3">
-                    {checkOuts.map((item) => (
+          {activeTab === "checkin" && (
+            <div className="space-y-4">
+              {checkIns.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="font-medium">Tidak ada kedatangan hari ini</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Daftar tamu dengan check-in hari ini akan tampil di sini.
+                  </p>
+                </div>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {checkIns.map((item) => {
+                    const status = reservationStatusMeta(item.status);
+                    return (
                       <li
                         key={item.id}
                         className="rounded-[1.5rem] bg-muted/40 p-1.5 ring-1 ring-foreground/5"
                       >
                         <div className="flex flex-col gap-4 rounded-[calc(1.5rem-6px)] bg-background/60 p-4 sm:flex-row sm:items-center sm:justify-between">
                           <div className="min-w-0">
-                            <p className="truncate font-medium">
-                              {item.guest_name}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="truncate font-medium">
+                                {item.guest_name}
+                              </p>
+                              <Badge variant={status.variant}>
+                                {status.label}
+                              </Badge>
+                            </div>
                             <p className="mt-1 text-sm text-muted-foreground">
                               {item.room_type_name}{" "}
                               {item.room_number
@@ -291,20 +228,74 @@ export default function DashboardPage() {
                             </p>
                           </div>
                           <Button
-                            variant="outline"
-                            className="rounded-full"
-                            onClick={() => handleCheckOut(item.id)}
-                            disabled={checkOutMutation.isPending}
+                            className="group/cta rounded-full pr-1.5 pl-5"
+                            onClick={() => handleCheckIn(item.id)}
+                            disabled={checkInMutation.isPending}
                           >
-                            Proses check-out
+                            Proses check-in
+                            <span className="ml-2 flex size-8 items-center justify-center rounded-full bg-primary-foreground/15 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/cta:translate-x-0.5">
+                              <IconArrowRight className="size-4" stroke={1.5} />
+                            </span>
                           </Button>
                         </div>
                       </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {activeTab === "checkout" && (
+            <div className="space-y-4">
+              {checkOuts.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="font-medium">
+                    Tidak ada keberangkatan hari ini
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Daftar tamu dengan check-out hari ini akan tampil di sini.
+                  </p>
+                </div>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {checkOuts.map((item) => (
+                    <li
+                      key={item.id}
+                      className="rounded-[1.5rem] bg-muted/40 p-1.5 ring-1 ring-foreground/5"
+                    >
+                      <div className="flex flex-col gap-4 rounded-[calc(1.5rem-6px)] bg-background/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">
+                            {item.guest_name}
+                          </p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {item.room_type_name}{" "}
+                            {item.room_number
+                              ? `· Kamar ${item.room_number}`
+                              : ""}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {formatDate(item.check_in)} sampai{" "}
+                            {formatDate(item.check_out)} ·{" "}
+                            {formatRupiah(item.total_price)}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          className="rounded-full"
+                          onClick={() => handleCheckOut(item.id)}
+                          disabled={checkOutMutation.isPending}
+                        >
+                          Proses check-out
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </InsetCard>
       )}
     </div>

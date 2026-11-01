@@ -16,15 +16,15 @@ export function InsetCard({
   return (
     <Component
       className={cn(
-        "rounded-[2rem] bg-muted/40 p-2 ring-1 ring-foreground/5 sm:p-3",
-        className
+        "rounded-[2rem] bg-muted/40 ring-1 ring-foreground/5",
+        className,
       )}
       {...props}
     >
       <div
         className={cn(
-          "rounded-[1.5rem] bg-card p-6 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-8",
-          innerClassName
+          "rounded-[1.5rem] bg-card p-5 shadow-[inset_0_1px_1px_rgb(255_255_255/0.16)] sm:p-7",
+          innerClassName,
         )}
       >
         {children}

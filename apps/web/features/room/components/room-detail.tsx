@@ -14,6 +14,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Image from "next/image";
 import { autoImplementMethods } from "next/dist/server/route-modules/app-route/helpers/auto-implement-methods";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { InsetCard } from "@/components/inset-card";
 
 const idr = new Intl.NumberFormat("id-ID", {
   style: "currency",
@@ -193,7 +194,7 @@ export function RoomDetail({ room, copy }: RoomDetailProps) {
         </div>
 
         <div>
-          <Card className="sticky top-20 border border-border/70 bg-card p-6 shadow-xs">
+          <InsetCard innerClassName="p-5!">
             <div className="space-y-4">
               <div>
                 <span className="text-xs text-muted-foreground">
@@ -228,7 +229,7 @@ export function RoomDetail({ room, copy }: RoomDetailProps) {
                 </div>
               </div>
             </div>
-          </Card>
+          </InsetCard>
         </div>
       </div>
     </div>

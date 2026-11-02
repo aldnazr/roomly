@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function NavMain({
   items,
@@ -22,6 +23,7 @@ export function NavMain({
   }[];
 }) {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
   return (
     <SidebarGroup>
@@ -42,7 +44,7 @@ export function NavMain({
                     <span>{item.title}</span>
                   </Link>
                 }
-                className="h-10 text-[16px] px-4"
+                className={isMobile ? "h-10 text-[16px] px-4" : ""}
               ></SidebarMenuButton>
             </SidebarMenuItem>
           ))}

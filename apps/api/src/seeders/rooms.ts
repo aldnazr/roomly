@@ -45,14 +45,15 @@ const roomTypes = [
 ] as const;
 
 const upsertRoomTypeSql = `
-  INSERT INTO room_types (id, name, base_price, capacity, description, amenities, photos)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO room_types (id, name, base_price, capacity, description, amenities, photos, total_rooms)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT(name) DO UPDATE SET
     base_price = excluded.base_price,
     capacity = excluded.capacity,
     description = excluded.description,
     amenities = excluded.amenities,
-    photos = excluded.photos
+    photos = excluded.photos,
+    total_rooms = excluded.total_rooms
   RETURNING id
 `;
 
@@ -79,6 +80,7 @@ export async function seedRooms(): Promise<number> {
         roomType.description,
         JSON.stringify(roomType.amenities),
         JSON.stringify(roomType.photos),
+        roomType.count,
       ],
     });
     const id = result.rows[0]!.id as string;

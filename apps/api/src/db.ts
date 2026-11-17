@@ -59,7 +59,8 @@ const roomTypesTableSql = (table: string, ifNotExists = false) => `
       capacity INTEGER NOT NULL CHECK(capacity > 0),
       description TEXT CHECK(description IS NULL OR length(trim(description)) > 0),
       amenities TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(amenities) AND json_type(amenities) = 'array'),
-      photos TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(photos) AND json_type(photos) = 'array')
+      photos TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(photos) AND json_type(photos) = 'array'),
+       total_rooms INTEGER NOT NULL DEFAULT 0 CHECK(total_rooms >= 0)
     ) STRICT;`;
 
 const roomsTableSql = (
@@ -694,6 +695,22 @@ const migrations: Migration[] = [
       );
     },
   },
+  {
+    id: 11,
+    name: "room_types_add_total_rooms",
+    up: async (db) => {
+      const columns = await db.execute("PRAGMA table_info(room_types)");
+      const names = columns.rows.map((row) => row.name as string);
+      if (!names.includes("total_rooms")) {
+        await db.execute(
+          "ALTER TABLE room_types ADD COLUMN total_rooms INTEGER NOT NULL DEFAULT 0 CHECK(total_rooms >= 0)",
+        );
+      }
+      await db.execute(
+        "UPDATE room_types SET total_rooms = (SELECT COUNT(*) FROM rooms WHERE room_type_id = room_types.id)",
+      );
+    },
+  }
 ];
 
 export async function migrate(database: Client = db): Promise<void> {

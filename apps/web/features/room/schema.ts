@@ -32,6 +32,11 @@ export const roomCreateSchema = z.object({
   photos: z
     .array(z.string().trim().url("Must be a valid URL"))
     .max(10, "Cannot exceed 10 photos"),
+  totalRooms: z
+    .number({ error: "Total rooms must be a number" })
+    .int("Total rooms must be an integer")
+    .min(0, "Total rooms cannot be negative")
+    .max(10000, "Total rooms cannot exceed 10000"),
 });
 
 export type RoomCreateInput = z.infer<typeof roomCreateSchema>;

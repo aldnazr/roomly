@@ -28,7 +28,6 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 
 import { RoomCreateInput, roomCreateSchema } from "@/features/room/schema";
-import { RoomCreatePayload } from "@/features/room/types";
 import { RoomNotFound } from "@/features/room/components/room-detail";
 import { isRoomId } from "@/features/room/room-id";
 import {
@@ -38,6 +37,7 @@ import {
 } from "@/features/room/use-room";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { RoomCreateUpdatePayload } from "@/features/room/types";
 
 const PRESET_AMENITIES = [
   "WiFi",
@@ -92,6 +92,7 @@ export function RoomCreate({ roomId }: { roomId?: string } = {}) {
       description: "",
       amenities: [],
       photos: [],
+      totalRooms: 0,
     },
   });
 
@@ -110,6 +111,7 @@ export function RoomCreate({ roomId }: { roomId?: string } = {}) {
       basePrice: room.base_price ?? 0,
       description: room.description ?? "",
       amenities: room.amenities ?? [],
+      totalRooms: room.total_rooms ?? 0,
       photos: (room.photos ?? [])
         .map((p: any) => (typeof p === "string" ? p : p?.url))
         .filter((u: any): u is string => Boolean(u)),
@@ -193,13 +195,14 @@ export function RoomCreate({ roomId }: { roomId?: string } = {}) {
   }
 
   async function onSubmit(data: RoomCreateInput) {
-    const payload: RoomCreatePayload = {
+    const payload: RoomCreateUpdatePayload = {
       name: data.roomName,
       capacity: Number(data.capacity),
       base_price: Number(data.basePrice),
       description: data.description?.trim() || undefined,
       amenities: data.amenities || [],
       photos: data.photos || [],
+      total_rooms: Number(data.totalRooms),
     };
 
     try {
@@ -363,6 +366,34 @@ export function RoomCreate({ roomId }: { roomId?: string } = {}) {
                   Maximum occupancy (1–20 guests).
                 </FieldDescription>
                 <FieldError errors={[{ message: errors.capacity?.message }]} />
+              </Field>
+
+              <Field data-invalid={!!errors.totalRooms}>
+                <FieldLabel htmlFor="totalRooms">
+                  Total Rooms (Units)
+                </FieldLabel>
+                <div
+                  className="flex items-center rounded-md border border-input bg-input/30 overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-colors data-[invalid=true]:border-destructive"
+                  data-invalid={!!errors.totalRooms}
+                >
+                  <input
+                    type="number"
+                    id="totalRooms"
+                    min="0"
+                    max="10000"
+                    placeholder="0"
+                    aria-invalid={!!errors.totalRooms}
+                    className="w-full bg-transparent px-3 py-1.5 text-sm font-medium focus:outline-none h-9 text-foreground"
+                    {...register("totalRooms", { valueAsNumber: true })}
+                  />
+                  <span className="bg-muted/50 px-3 py-2 text-xs font-medium text-muted-foreground border-l border-input flex items-center select-none h-9">
+                    units
+                  </span>
+                </div>
+                <FieldDescription>
+                  Number of physical units for this room type.
+                </FieldDescription>
+                <FieldError errors={[{ message: errors.totalRooms?.message }]} />
               </Field>
             </div>
           </FieldSet>

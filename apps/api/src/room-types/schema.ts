@@ -42,6 +42,12 @@ const photosSchema = z
   .array(z.string().trim().url("Photo must be a valid URL"))
   .max(10, "Cannot exceed 10 photos");
 
+const totalRoomsSchema = z
+  .number({ error: "Total rooms must be an integer" })
+  .int("Total rooms must be an integer")
+  .min(0, "Total rooms cannot be negative")
+  .max(10000, "Total rooms is too high");
+
 export const createRoomTypeSchema = z.object({
   name: nameSchema,
   capacity: capacitySchema,
@@ -49,6 +55,7 @@ export const createRoomTypeSchema = z.object({
   description: descriptionSchema,
   amenities: amenitiesSchema.default([]),
   photos: photosSchema.default([]),
+  total_rooms: totalRoomsSchema.default(0),
 });
 
 export const updateRoomTypeSchema = z
@@ -59,6 +66,7 @@ export const updateRoomTypeSchema = z
     description: descriptionSchema,
     amenities: amenitiesSchema.optional(),
     photos: photosSchema.optional(),
+    total_rooms: totalRoomsSchema.optional(),
   })
   .refine(
     (data) => Object.values(data).some((val) => val !== undefined),

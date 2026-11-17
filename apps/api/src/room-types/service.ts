@@ -76,11 +76,9 @@ export async function listRoomTypes(query?: QueryRoomTypeInput): Promise<RoomTyp
       rt.description,
       rt.amenities,
       rt.photos,
-      COUNT(r.id) AS total_rooms
+      rt.total_rooms
     FROM room_types rt
-    LEFT JOIN rooms r ON r.room_type_id = rt.id
     ${whereClause}
-    GROUP BY rt.id
     ORDER BY rt.name COLLATE NOCASE ASC`,
     params,
   );
@@ -98,11 +96,9 @@ export async function getRoomType(id: string): Promise<RoomTypeDto> {
       rt.description,
       rt.amenities,
       rt.photos,
-      COUNT(r.id) AS total_rooms
+      rt.total_rooms
     FROM room_types rt
-    LEFT JOIN rooms r ON r.room_type_id = rt.id
-    WHERE rt.id = ?
-    GROUP BY rt.id`,
+    WHERE rt.id = ?`,
     [id],
   );
 
@@ -117,9 +113,9 @@ export async function createRoomType(input: CreateRoomTypeInput): Promise<RoomTy
   const photosJson = JSON.stringify(input.photos);
 
   const row = await queryOne<DbRoomTypeRow>(
-    `INSERT INTO room_types (id, name, base_price, capacity, description, amenities, photos)
-     VALUES (?, ?, ?, ?, ?, ?, ?)
-     RETURNING id, name, base_price, capacity, description, amenities, photos`,
+    `INSERT INTO room_types (id, name, base_price, capacity, description, amenities, photos, total_rooms)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     RETURNING id, name, base_price, capacity, description, amenities, photos, total_rooms`,
     [
       newId(),
       input.name,
@@ -128,10 +124,11 @@ export async function createRoomType(input: CreateRoomTypeInput): Promise<RoomTy
       input.description ?? null,
       amenitiesJson,
       photosJson,
+      input.total_rooms ?? 0,
     ],
   );
 
-  return mapRow({ ...row!, total_rooms: 0 });
+  return mapRow(row!);
 }
 
 export async function updateRoomType(id: string, input: UpdateRoomTypeInput): Promise<RoomTypeDto> {
@@ -167,6 +164,10 @@ export async function updateRoomType(id: string, input: UpdateRoomTypeInput): Pr
   if (input.photos !== undefined) {
     updates.push("photos = ?");
     params.push(JSON.stringify(input.photos));
+  }
+  if (input.total_rooms !== undefined) {
+    updates.push("total_rooms = ?");
+    params.push(input.total_rooms);
   }
 
   params.push(id);

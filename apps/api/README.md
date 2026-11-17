@@ -348,7 +348,7 @@ curl -s http://localhost:4000/api/room-types \
 
 ### Create
 
-`POST /api/room-types` with JSON `{ "name", "capacity", "base_price", "description"?, "amenities"?, "photos"? }`.
+`POST /api/room-types` with JSON `{ "name", "capacity", "base_price", "description"?, "amenities"?, "photos"?, "total_rooms"? }`.
 
 ```bash
 curl -s -X POST http://localhost:4000/api/room-types \
@@ -363,7 +363,7 @@ curl -s -X POST http://localhost:4000/api/room-types \
 
 ### Update
 
-`PATCH /api/room-types/:id` with optional fields `{ "name", "capacity", "base_price", "description", "amenities", "photos" }`.
+`PATCH /api/room-types/:id` with optional fields `{ "name", "capacity", "base_price", "description", "amenities", "photos", "total_rooms" }`.
 
 ```bash
 curl -s -X PATCH http://localhost:4000/api/room-types/45be122e-9214-4954-bd40-130f94c8af0f \

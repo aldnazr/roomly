@@ -17,11 +17,12 @@ export interface RoomDetailResponse {
   data: Room;
 }
 
-export interface RoomCreatePayload {
+export interface RoomCreateUpdatePayload {
   name: string;
   capacity: number;
   base_price: number;
   description?: string;
   amenities?: string[];
   photos?: string[];
+  total_rooms?: number;
 }

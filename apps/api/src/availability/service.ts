@@ -78,11 +78,9 @@ export async function searchAvailability(
       rt.description,
       rt.amenities,
       rt.photos,
-      COUNT(r.id) AS total_rooms
+      rt.total_rooms
     FROM room_types rt
-    LEFT JOIN rooms r ON r.room_type_id = rt.id
     WHERE rt.capacity >= ?
-    GROUP BY rt.id
     ORDER BY rt.base_price ASC, rt.name ASC`,
     [query.guests],
   );

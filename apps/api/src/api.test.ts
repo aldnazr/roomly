@@ -67,7 +67,7 @@ describe("migrations", () => {
     const applied = (
       await query<{ id: number }>("SELECT id FROM schema_migrations ORDER BY id ASC")
     ).map((row) => row.id);
-    expect(applied).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(applied).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
 
     const columns = (
       await query<{ name: string }>("PRAGMA table_info(users)")
@@ -99,7 +99,7 @@ describe("migrations", () => {
     const count = (
       await queryOne<{ n: number }>("SELECT COUNT(*) AS n FROM schema_migrations")
     )!.n;
-    expect(count).toBe(10);
+    expect(count).toBe(11);
   });
 });
 

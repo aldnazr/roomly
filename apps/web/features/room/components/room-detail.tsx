@@ -115,6 +115,7 @@ export function RoomDetail({ room, copy }: RoomDetailProps) {
             <AspectRatio ratio={isMobile ? 5 / 3 : 5 / 2}>
               <Image
                 fill
+                unoptimized
                 src={photos[0]}
                 alt={room.name}
                 className="object-cover"

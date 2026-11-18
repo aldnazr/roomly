@@ -1,4 +1,4 @@
-import { Clock } from "../shared/application/infrastructure-ports";
+import type { Clock } from "../shared/application/infrastructure-ports";
 
 export class SystemClock implements Clock {
   now(): Date {

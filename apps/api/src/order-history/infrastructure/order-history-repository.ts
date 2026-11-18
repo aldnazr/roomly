@@ -1,6 +1,9 @@
-import { query, queryOne } from "../db";
-import type { OrderHistoryRepository, AdminOrderHistoryRow } from "./application/ports";
-import type { AdminOrderHistoryFilters } from "./schema";
+import { query, queryOne } from "../../db";
+import type {
+  AdminOrderHistoryRow,
+  OrderHistoryRepository,
+} from "../application/ports";
+import type { AdminOrderHistoryFilters } from "../schema";
 
 const BASE_SQL = `
   SELECT
@@ -42,7 +45,11 @@ const BASE_SQL = `
   )
 `;
 
-function buildWhere(filters: AdminOrderHistoryFilters): { clause: string; params: (string | number)[]; normalized: Record<string, string | number | boolean | null> } {
+function buildWhere(filters: AdminOrderHistoryFilters): {
+  clause: string;
+  params: (string | number)[];
+  normalized: Record<string, string | number | boolean | null>;
+} {
   const conditions: string[] = [];
   const params: (string | number)[] = [];
   const normalized: Record<string, string | number | boolean | null> = {};
@@ -87,7 +94,8 @@ function buildWhere(filters: AdminOrderHistoryFilters): { clause: string; params
     normalized.check_in_to = filters.check_in_to;
   }
 
-  const clause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const clause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   return { clause, params, normalized };
 }
 
@@ -114,7 +122,7 @@ export class LibsqlOrderHistoryRepository implements OrderHistoryRepository {
     return countRow?.total ?? 0;
   }
 
-  async normalize(filters: AdminOrderHistoryFilters) {
+  normalize(filters: AdminOrderHistoryFilters) {
     return buildWhere(filters).normalized;
   }
 }

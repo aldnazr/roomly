@@ -1,7 +1,6 @@
-import { db, query, queryOne } from "../db";
-import type { RoleRepository, RoleRecord } from "./application/ports";
-import { HttpError } from "../errors";
-import { NotFoundError, ValidationError } from "../shared/domain/errors";
+import { db, query, queryOne } from "../../db";
+import { NotFoundError, ValidationError } from "../../shared/domain/errors";
+import type { RoleRecord, RoleRepository } from "../application/ports";
 
 export class LibsqlRoleRepository implements RoleRepository {
   async listRoles(): Promise<RoleRecord[]> {
@@ -20,18 +19,24 @@ export class LibsqlRoleRepository implements RoleRepository {
       else grouped.set(row.slug, [row.permission_slug]);
     }
 
-    const roles = await query<{ slug: string; name: string; description: string }>(
-      "SELECT slug, name, description FROM roles ORDER BY id",
-    );
+    const roles = await query<{
+      slug: string;
+      name: string;
+      description: string;
+    }>("SELECT slug, name, description FROM roles ORDER BY id");
 
-    return roles.map((role) => ({ ...role, permissions: grouped.get(role.slug) ?? [] }));
+    return roles.map((role) => ({
+      ...role,
+      permissions: grouped.get(role.slug) ?? [],
+    }));
   }
 
   async getRole(slug: string): Promise<RoleRecord | null> {
-    const role = await queryOne<{ slug: string; name: string; description: string }>(
-      "SELECT slug, name, description FROM roles WHERE slug = ?",
-      [slug],
-    );
+    const role = await queryOne<{
+      slug: string;
+      name: string;
+      description: string;
+    }>("SELECT slug, name, description FROM roles WHERE slug = ?", [slug]);
     if (!role) return null;
 
     const permissions = (
@@ -50,17 +55,29 @@ export class LibsqlRoleRepository implements RoleRepository {
   }
 
   async listPermissionSlugs(): Promise<string[]> {
-    return (await query<{ slug: string }>("SELECT slug FROM permissions")).map((p) => p.slug);
+    return (await query<{ slug: string }>("SELECT slug FROM permissions")).map(
+      (p) => p.slug,
+    );
   }
 
-  async setRolePermissions(slug: string, permissionSlugs: string[]): Promise<RoleRecord> {
-    const role = await queryOne<{ id: number }>("SELECT id FROM roles WHERE slug = ?", [slug]);
+  async setRolePermissions(
+    slug: string,
+    permissionSlugs: string[],
+  ): Promise<RoleRecord> {
+    const role = await queryOne<{ id: number }>(
+      "SELECT id FROM roles WHERE slug = ?",
+      [slug],
+    );
     if (!role) throw new NotFoundError("Role not found");
 
     const known = new Set(await this.listPermissionSlugs());
-    const unknown = permissionSlugs.filter((permissionSlug) => !known.has(permissionSlug));
+    const unknown = permissionSlugs.filter(
+      (permissionSlug) => !known.has(permissionSlug),
+    );
     if (unknown.length > 0) {
-      throw new ValidationError(`Unknown permission slugs: ${unknown.join(", ")}`);
+      throw new ValidationError(
+        `Unknown permission slugs: ${unknown.join(", ")}`,
+      );
     }
 
     await db.batch(

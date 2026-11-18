@@ -1,8 +1,15 @@
-import type { CreateRoomTypeInput, UpdateRoomTypeInput, QueryRoomTypeInput } from "../schema";
-import type { RoomTypeRepository } from "./application/ports";
+import type {
+  CreateRoomTypeInput,
+  UpdateRoomTypeInput,
+  QueryRoomTypeInput,
+} from "../schema";
 import type { IdGenerator } from "../../shared/application/infrastructure-ports";
-import { ConflictError, NotFoundError, ValidationError } from "../../shared/domain/errors";
-import type { RoomTypeRecord } from "./application/ports";
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from "../../shared/domain/errors";
+import type { RoomTypeRecord, RoomTypeRepository } from "./ports";
 
 export class RoomTypeService {
   constructor(
@@ -25,7 +32,10 @@ export class RoomTypeService {
 
   async createRoomType(input: CreateRoomTypeInput): Promise<RoomTypeRecord> {
     const existing = await this.repository.findByName(input.name);
-    if (existing) throw new ConflictError(`Room type with name '${input.name}' already exists`);
+    if (existing)
+      throw new ConflictError(
+        `Room type with name '${input.name}' already exists`,
+      );
 
     return this.repository.create({
       id: this.idGenerator.newId(),
@@ -39,13 +49,18 @@ export class RoomTypeService {
     });
   }
 
-  async updateRoomType(id: string, input: UpdateRoomTypeInput): Promise<RoomTypeRecord> {
+  async updateRoomType(
+    id: string,
+    input: UpdateRoomTypeInput,
+  ): Promise<RoomTypeRecord> {
     await this.getRoomType(id);
 
     if (input.name) {
       const existing = await this.repository.findByName(input.name);
       if (existing && existing.id !== id) {
-        throw new ConflictError(`Room type with name '${input.name}' already exists`);
+        throw new ConflictError(
+          `Room type with name '${input.name}' already exists`,
+        );
       }
     }
 

@@ -1,5 +1,5 @@
-import type { RoleRepository, RoleRecord } from "./application/ports";
-import { NotFoundError, ValidationError } from "../shared/domain/errors";
+import { NotFoundError, ValidationError } from "../../shared/domain/errors";
+import type { RoleRecord, RoleRepository } from "./ports";
 
 function assertRoleSlug(slug: string): string {
   const cleaned = slug.trim();
@@ -21,7 +21,10 @@ export class RoleService {
     return role;
   }
 
-  async setRolePermissions(slug: string, permissionSlugs: string[]): Promise<RoleRecord> {
+  async setRolePermissions(
+    slug: string,
+    permissionSlugs: string[],
+  ): Promise<RoleRecord> {
     const cleaned = assertRoleSlug(slug);
     return this.repository.setRolePermissions(cleaned, permissionSlugs);
   }

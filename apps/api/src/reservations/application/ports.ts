@@ -1,5 +1,3 @@
-import type { AuthUser } from "../auth/middleware";
-
 export type ReservationHistoryRow = {
   id: number;
   guest_id: number | null;
@@ -18,10 +16,16 @@ export type ReservationHistoryRow = {
 };
 
 export interface ReservationRepository {
-  getUserAccount(userId: number): Promise<{ name: string; email: string } | null>;
+  getUserAccount(
+    userId: number,
+  ): Promise<{ name: string; email: string } | null>;
   findGuestByEmail(email: string): Promise<{ id: number } | null>;
   createGuest(name: string, email: string): Promise<{ id: number }>;
-  findAvailableRoom(roomTypeId: string, checkOut: string, checkIn: string): Promise<{ id: string } | null>;
+  findAvailableRoom(
+    roomTypeId: string,
+    checkOut: string,
+    checkIn: string,
+  ): Promise<{ id: string } | null>;
   createCheckoutReservation(input: {
     guestId: number;
     roomTypeId: string;
@@ -46,9 +50,15 @@ export interface ReservationRepository {
   listCheckOuts(date: string): Promise<ReservationHistoryRow[]>;
   getRoomStats(): Promise<{ occupied_rooms: number; available_rooms: number }>;
   cancelReservation(id: number): Promise<{ id: number; status: string } | null>;
-  getReservationForCheckIn(id: number): Promise<{ id: number; room_id: string | null; status: string } | null>;
+  getReservationForCheckIn(
+    id: number,
+  ): Promise<{ id: number; room_id: string | null; status: string } | null>;
   setCheckedIn(id: number, roomId: string): Promise<void>;
-  getReservationForCheckOut(id: number): Promise<{ id: number; room_id: string | null; status: string } | null>;
+  getReservationForCheckOut(
+    id: number,
+  ): Promise<{ id: number; room_id: string | null; status: string } | null>;
   setCheckedOut(id: number, roomId: string | null): Promise<void>;
-  getActiveReservationRow(userId: number): Promise<ReservationHistoryRow | null>;
+  getActiveReservationRow(
+    userId: number,
+  ): Promise<ReservationHistoryRow | null>;
 }

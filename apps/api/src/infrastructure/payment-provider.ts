@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import {
+import type {
   PaymentProvider,
   PaymentProviderResult,
 } from "../shared/application/infrastructure-ports";

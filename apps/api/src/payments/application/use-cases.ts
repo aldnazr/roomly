@@ -1,15 +1,20 @@
-import type { AuthUser } from "../auth/middleware";
-import type { PaymentRepository } from "./application/ports";
-import type { PaymentProvider } from "../../shared/application/infrastructure-ports";
+import type { AuthUser } from "../../auth/middleware";
+import { newId } from "../../ids";
 import type { Clock } from "../../shared/application/infrastructure-ports";
-import { HttpError } from "../errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "../../shared/domain/errors";
+import type {
+  BankCode,
+  DbPaymentRow,
+  PaymentMethod,
+  PaymentProvider,
+} from "../types";
 import { toPaymentDTO } from "./mappers";
-import { NotFoundError, ForbiddenError, ValidationError, ConflictError } from "../../shared/domain/errors";
-import type { BankCode, PaymentMethod, DbPaymentRow } from "./types";
-import { newId } from "../ids";
-
-// toPaymentDTO is defined in service; re-export type
-export type PaymentDTO = import("./types").PaymentDTO;
+import type { PaymentRepository } from "./ports";
 
 export class PaymentService {
   constructor(
@@ -35,13 +40,18 @@ export class PaymentService {
 
     const isOwner =
       res.guest_id === user.id ||
-      (!!userRow && !!guestRow && userRow.toLowerCase() === guestRow.toLowerCase());
+      (!!userRow &&
+        !!guestRow &&
+        userRow.toLowerCase() === guestRow.toLowerCase());
 
     if (!isOwner) throw new ForbiddenError("Access denied to this reservation");
     return res;
   }
 
-  async transitionPayment(paymentId: string, newStatus: "paid" | "failed" | "expired"): Promise<DbPaymentRow> {
+  async transitionPayment(
+    paymentId: string,
+    newStatus: "paid" | "failed" | "expired",
+  ): Promise<DbPaymentRow> {
     const now = this.now();
     const nowIso = now.toISOString();
 
@@ -54,7 +64,12 @@ export class PaymentService {
 
     const paidAt = newStatus === "paid" ? nowIso : null;
 
-    const affected = await this.repository.updatePaymentStatus(paymentId, newStatus, nowIso, paidAt);
+    const affected = await this.repository.updatePaymentStatus(
+      paymentId,
+      newStatus,
+      nowIso,
+      paidAt,
+    );
     if (affected === 0) {
       const reFetch = await this.repository.getPaymentById(paymentId);
       if (reFetch) return reFetch;
@@ -62,9 +77,15 @@ export class PaymentService {
     }
 
     if (newStatus === "paid") {
-      await this.repository.updateReservationOnPaid(payment.reservation_id, nowIso);
+      await this.repository.updateReservationOnPaid(
+        payment.reservation_id,
+        nowIso,
+      );
     } else if (newStatus === "expired") {
-      const otherPending = await this.repository.countOtherPendingPayments(payment.reservation_id, paymentId);
+      const otherPending = await this.repository.countOtherPendingPayments(
+        payment.reservation_id,
+        paymentId,
+      );
       if (otherPending === 0) {
         await this.repository.cancelReservation(payment.reservation_id);
       }
@@ -84,18 +105,24 @@ export class PaymentService {
     const nowIso = now.toISOString();
 
     if (payment.status === "pending" && payment.expires_at <= nowIso) {
-      const expiredPayment = await this.transitionPayment(payment.id, "expired");
+      const expiredPayment = await this.transitionPayment(
+        payment.id,
+        "expired",
+      );
       return toPaymentDTO(expiredPayment, now);
     }
 
     return toPaymentDTO(payment, now);
   }
 
-  async createPayment(input: {
-    reservationId: string;
-    method: PaymentMethod;
-    bank?: BankCode;
-  }, user: AuthUser) {
+  async createPayment(
+    input: {
+      reservationId: string;
+      method: PaymentMethod;
+      bank?: BankCode;
+    },
+    user: AuthUser,
+  ) {
     if (input.method === "va" && !input.bank) {
       throw new ValidationError("Bank is required for VA payment method");
     }
@@ -103,7 +130,10 @@ export class PaymentService {
       throw new ValidationError("Bank is not allowed for QRIS payment method");
     }
 
-    const reservation = await this.verifyReservationAccess(input.reservationId, user);
+    const reservation = await this.verifyReservationAccess(
+      input.reservationId,
+      user,
+    );
 
     if (reservation.status !== "pending_payment") {
       throw new ConflictError("Reservation is not in a payable status");
@@ -112,12 +142,17 @@ export class PaymentService {
     const now = this.now();
     const nowIso = now.toISOString();
 
-    const pendingPayments = await this.repository.listPendingPayments(input.reservationId);
+    const pendingPayments = await this.repository.listPendingPayments(
+      input.reservationId,
+    );
 
     for (const p of pendingPayments) {
       if (p.expires_at <= nowIso) {
         await this.transitionPayment(p.id, "expired");
-      } else if (p.method === input.method && (input.method !== "va" || p.bank === input.bank)) {
+      } else if (
+        p.method === input.method &&
+        (input.method !== "va" || p.bank === input.bank)
+      ) {
         return toPaymentDTO(p, now);
       }
     }
@@ -125,7 +160,9 @@ export class PaymentService {
     const attempts = await this.repository.countPayments(input.reservationId);
     const maxAttempts = Number(process.env.PAYMENT_MAX_ATTEMPTS || "3");
     if (attempts >= maxAttempts) {
-      throw new ConflictError("Maximum payment attempts reached for this reservation");
+      throw new ConflictError(
+        "Maximum payment attempts reached for this reservation",
+      );
     }
 
     const provider = this.providerFactory(() => now);

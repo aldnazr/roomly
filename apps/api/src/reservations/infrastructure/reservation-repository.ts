@@ -1,5 +1,5 @@
-import { db, query, queryOne } from "../db";
-import type { ReservationRepository, ReservationHistoryRow } from "./application/ports";
+import { db, query, queryOne } from "../../db";
+import type { ReservationRepository, ReservationHistoryRow } from "../application/ports";
 
 const BASE = `
   SELECT

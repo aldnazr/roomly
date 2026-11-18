@@ -1,8 +1,11 @@
-import type { AuthUser } from "../auth/middleware";
-import type { AdminOrderHistoryFilters } from "./schema";
-import type { OrderHistoryRepository } from "./application/ports";
-import { ForbiddenError } from "../shared/domain/errors";
-import type { AdminOrderHistoryItem, AdminOrderHistoryResult } from "./service";
+import type { AuthUser } from "../../auth/middleware";
+import { ForbiddenError } from "../../shared/domain/errors";
+import type { AdminOrderHistoryFilters } from "../schema";
+import type {
+  AdminOrderHistoryItem,
+  AdminOrderHistoryResult,
+} from "../service";
+import type { OrderHistoryRepository } from "./ports";
 
 function mapRow(row: any): AdminOrderHistoryItem {
   const payment =
@@ -72,7 +75,10 @@ function mapRow(row: any): AdminOrderHistoryItem {
 export class OrderHistoryService {
   constructor(private readonly repository: OrderHistoryRepository) {}
 
-  async listAdminOrderHistory(user: AuthUser, filters: AdminOrderHistoryFilters): Promise<AdminOrderHistoryResult> {
+  async listAdminOrderHistory(
+    user: AuthUser,
+    filters: AdminOrderHistoryFilters,
+  ): Promise<AdminOrderHistoryResult> {
     if (user.role !== "admin") {
       throw new ForbiddenError("Insufficient permissions");
     }

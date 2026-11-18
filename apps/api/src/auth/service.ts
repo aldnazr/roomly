@@ -2,7 +2,7 @@ import { BcryptPasswordHasher } from "../infrastructure/password-hasher";
 import { JoseTokenIssuer } from "../infrastructure/token-issuer";
 import { LibsqlAuthRepository } from "./infrastructure/auth-repository";
 import { AuthService } from "./application/use-cases";
-import { parseLoginBody, parseRegisterBody } from "./schema";
+import { parseLoginBody } from "./schema";
 import type { RegisterInput } from "./schema";
 
 const service = new AuthService(

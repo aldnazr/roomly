@@ -1,4 +1,4 @@
-import type { AdminOrderHistoryFilters } from "./schema";
+import type { AdminOrderHistoryFilters } from "../schema";
 
 export type AdminOrderHistoryRow = {
   id: number;
@@ -29,7 +29,13 @@ export type AdminOrderHistoryRow = {
 };
 
 export interface OrderHistoryRepository {
-  list(filters: AdminOrderHistoryFilters, limit: number, offset: number): Promise<AdminOrderHistoryRow[]>;
+  list(
+    filters: AdminOrderHistoryFilters,
+    limit: number,
+    offset: number,
+  ): Promise<AdminOrderHistoryRow[]>;
   count(filters: AdminOrderHistoryFilters): Promise<number>;
-  normalize(filters: AdminOrderHistoryFilters): Record<string, string | number | boolean | null>;
+  normalize(
+    filters: AdminOrderHistoryFilters,
+  ): Record<string, string | number | boolean | null>;
 }

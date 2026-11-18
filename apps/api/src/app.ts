@@ -2,6 +2,15 @@ import express, { type ErrorRequestHandler } from "express";
 import cors from "cors";
 import { ZodError } from "zod";
 import { HttpError } from "./errors";
+import {
+  BusinessRuleViolation,
+  ConflictError,
+  DomainError,
+  ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
+  ValidationError,
+} from "./shared/domain/errors";
 import { authRouter } from "./auth/routes";
 import { rolesRouter } from "./roles/routes";
 import { permissionsRouter } from "./permissions/routes";
@@ -16,6 +25,18 @@ import { adminOrderHistoryRouter } from "./order-history/routes";
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
     res.status(err.status).json({ error: { message: err.message } });
+  } else if (err instanceof NotFoundError) {
+    res.status(404).json({ error: { message: err.message } });
+  } else if (err instanceof ConflictError) {
+    res.status(409).json({ error: { message: err.message } });
+  } else if (err instanceof ForbiddenError) {
+    res.status(403).json({ error: { message: err.message } });
+  } else if (err instanceof UnauthorizedError) {
+    res.status(401).json({ error: { message: err.message } });
+  } else if (err instanceof ValidationError) {
+    res.status(400).json({ error: { message: err.message } });
+  } else if (err instanceof BusinessRuleViolation) {
+    res.status(409).json({ error: { message: err.message } });
   } else if (err instanceof ZodError) {
     res
       .status(400)

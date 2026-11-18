@@ -1,8 +1,8 @@
 import type { RequestHandler } from "express";
-import { jwtVerify } from "jose";
-import { requireJwtSecret } from "../config";
-import { queryOne } from "../db";
 import { HttpError } from "../errors";
+import { JoseTokenIssuer } from "../infrastructure/token-issuer";
+import { LibsqlAuthRepository } from "./infrastructure/auth-repository";
+import { AuthorizationService } from "../shared/application/authorization-service";
 
 export type AuthUser = { id: number; role: string };
 
@@ -14,6 +14,9 @@ declare global {
   }
 }
 
+const tokenIssuer = new JoseTokenIssuer();
+const authorizationService = new AuthorizationService(new LibsqlAuthRepository());
+
 const INVALID_TOKEN = "Invalid or expired access token";
 
 export const requireAuth: RequestHandler = async (req, _res, next) => {
@@ -22,19 +25,13 @@ export const requireAuth: RequestHandler = async (req, _res, next) => {
     const token = match?.[1];
     if (!token) throw new HttpError(401, "Missing or malformed Authorization header");
 
-    const secret = new TextEncoder().encode(requireJwtSecret());
-    const { payload } = await jwtVerify(token, secret, {
-      algorithms: ["HS256"],
-      issuer: "roomly-api",
-      audience: "roomly",
-    });
-
-    const id = Number(payload.sub);
-    if (!Number.isInteger(id) || typeof payload.role !== "string") {
+    const claims = await tokenIssuer.verify(token);
+    const id = Number(claims.sub);
+    if (!Number.isInteger(id) || typeof claims.role !== "string") {
       throw new HttpError(401, INVALID_TOKEN);
     }
 
-    req.user = { id, role: payload.role };
+    req.user = { id, role: claims.role };
     next();
   } catch (err) {
     next(err instanceof HttpError ? err : new HttpError(401, INVALID_TOKEN));
@@ -49,15 +46,7 @@ export function requirePermission(slug: string): RequestHandler {
     }
 
     try {
-      const granted = await queryOne<{ granted: number }>(
-        `SELECT 1 AS granted
-         FROM role_permissions rp
-         JOIN roles r ON r.id = rp.role_id
-         JOIN permissions p ON p.id = rp.permission_id
-         WHERE r.slug = ? AND p.slug = ?`,
-        [req.user.role, slug],
-      );
-
+      const granted = await authorizationService.hasPermission(req.user.role, slug);
       if (granted) next();
       else next(new HttpError(403, "Insufficient permissions"));
     } catch (err) {

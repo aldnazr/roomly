@@ -2,10 +2,9 @@ import crypto from "node:crypto";
 import express, { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../auth/middleware";
-import { queryOne } from "../db";
 import { HttpError } from "../errors";
-import { getPaymentProvider } from "./provider";
-import { createPayment, getPayment, transitionPayment } from "./service";
+import { createPaymentProvider } from "../infrastructure/payment-provider";
+import { createPayment, getPayment, transitionPayment, getPaymentRow, getPaymentByProviderRef } from "./service";
 import type { DbPaymentRow } from "./types";
 
 export const paymentsRouter = Router();
@@ -70,7 +69,7 @@ paymentsRouter.post(
         (req.headers["x-mock-signature"] as string) ||
         "";
 
-      const provider = getPaymentProvider();
+      const provider = createPaymentProvider();
       let parsed: { providerRef: string; status: "paid" | "failed" | "expired" };
 
       try {
@@ -82,9 +81,7 @@ paymentsRouter.post(
         throw new HttpError(400, err.message || "Invalid payload");
       }
 
-      const payment = await queryOne<DbPaymentRow>("SELECT * FROM payments WHERE provider_ref = ?", [
-        parsed.providerRef,
-      ]);
+       const payment = await getPaymentByProviderRef(parsed.providerRef);
 
       if (!payment) {
         throw new HttpError(404, "Payment not found");
@@ -110,7 +107,7 @@ paymentsRouter.post("/:id/simulate", requireAuth, async (req, res, next) => {
     });
     const parsed = schema.parse(req.body);
 
-    const payment = await queryOne<DbPaymentRow>("SELECT * FROM payments WHERE id = ?", [String(req.params.id)]);
+    const payment = await getPaymentRow(String(req.params.id));
     if (!payment) {
       throw new HttpError(404, "Payment not found");
     }

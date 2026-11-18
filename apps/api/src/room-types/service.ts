@@ -1,202 +1,29 @@
-import { db, query as queryAll, queryOne } from "../db";
-import { HttpError } from "../errors";
-import { newId } from "../ids";
-import type {
-  CreateRoomTypeInput,
-  QueryRoomTypeInput,
-  UpdateRoomTypeInput,
-} from "./schema";
+import { CryptoIdGenerator } from "../infrastructure/id-generator";
+import { LibsqlRoomTypeRepository } from "./infrastructure/room-type-repository";
+import { RoomTypeService } from "./application/use-cases";
 
-export type RoomTypeDto = {
-  id: string;
-  name: string;
-  base_price: number;
-  capacity: number;
-  description: string | null;
-  amenities: string[];
-  photos: string[];
-  total_rooms: number;
-};
+const service = new RoomTypeService(new LibsqlRoomTypeRepository(), new CryptoIdGenerator());
 
-type DbRoomTypeRow = {
-  id: string;
-  name: string;
-  base_price: number;
-  capacity: number;
-  description: string | null;
-  amenities: string;
-  photos: string;
-  total_rooms: number;
-};
+import type { RoomType } from "../shared/domain/room-type";
 
-function mapRow(row: DbRoomTypeRow): RoomTypeDto {
-  return {
-    id: row.id,
-    name: row.name,
-    base_price: row.base_price,
-    capacity: row.capacity,
-    description: row.description,
-    amenities: JSON.parse(row.amenities || "[]"),
-    photos: JSON.parse(row.photos || "[]"),
-    total_rooms: row.total_rooms ?? 0,
-  };
+export type RoomTypeDto = RoomType;
+
+export async function listRoomTypes(query?: any) {
+  return service.listRoomTypes(query);
 }
 
-async function checkNameConflict(name: string, excludeId?: string): Promise<void> {
-  const existing = await queryOne<{ id: string }>(
-    "SELECT id FROM room_types WHERE name = ? COLLATE NOCASE",
-    [name],
-  );
-  if (existing && existing.id !== excludeId) {
-    throw new HttpError(409, `Room type with name '${name}' already exists`);
-  }
+export async function getRoomType(id: string) {
+  return service.getRoomType(id);
 }
 
-export async function listRoomTypes(query?: QueryRoomTypeInput): Promise<RoomTypeDto[]> {
-  const conditions: string[] = [];
-  const params: number[] = [];
-
-  if (query?.capacity_min !== undefined) {
-    conditions.push("rt.capacity >= ?");
-    params.push(query.capacity_min);
-  }
-  if (query?.capacity_max !== undefined) {
-    conditions.push("rt.capacity <= ?");
-    params.push(query.capacity_max);
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-
-  const rows = await queryAll<DbRoomTypeRow>(
-    `SELECT
-      rt.id,
-      rt.name,
-      rt.base_price,
-      rt.capacity,
-      rt.description,
-      rt.amenities,
-      rt.photos,
-      rt.total_rooms
-    FROM room_types rt
-    ${whereClause}
-    ORDER BY rt.name COLLATE NOCASE ASC`,
-    params,
-  );
-
-  return rows.map(mapRow);
+export async function createRoomType(input: any) {
+  return service.createRoomType(input);
 }
 
-export async function getRoomType(id: string): Promise<RoomTypeDto> {
-  const row = await queryOne<DbRoomTypeRow>(
-    `SELECT
-      rt.id,
-      rt.name,
-      rt.base_price,
-      rt.capacity,
-      rt.description,
-      rt.amenities,
-      rt.photos,
-      rt.total_rooms
-    FROM room_types rt
-    WHERE rt.id = ?`,
-    [id],
-  );
-
-  if (!row) throw new HttpError(404, "Room type not found");
-  return mapRow(row);
+export async function updateRoomType(id: string, input: any) {
+  return service.updateRoomType(id, input);
 }
 
-export async function createRoomType(input: CreateRoomTypeInput): Promise<RoomTypeDto> {
-  await checkNameConflict(input.name);
-
-  const amenitiesJson = JSON.stringify(input.amenities);
-  const photosJson = JSON.stringify(input.photos);
-
-  const row = await queryOne<DbRoomTypeRow>(
-    `INSERT INTO room_types (id, name, base_price, capacity, description, amenities, photos, total_rooms)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-     RETURNING id, name, base_price, capacity, description, amenities, photos, total_rooms`,
-    [
-      newId(),
-      input.name,
-      input.base_price,
-      input.capacity,
-      input.description ?? null,
-      amenitiesJson,
-      photosJson,
-      input.total_rooms ?? 0,
-    ],
-  );
-
-  return mapRow(row!);
-}
-
-export async function updateRoomType(id: string, input: UpdateRoomTypeInput): Promise<RoomTypeDto> {
-  await getRoomType(id);
-
-  if (input.name) {
-    await checkNameConflict(input.name, id);
-  }
-
-  const updates: string[] = [];
-  const params: (string | number | null)[] = [];
-
-  if (input.name !== undefined) {
-    updates.push("name = ?");
-    params.push(input.name);
-  }
-  if (input.base_price !== undefined) {
-    updates.push("base_price = ?");
-    params.push(input.base_price);
-  }
-  if (input.capacity !== undefined) {
-    updates.push("capacity = ?");
-    params.push(input.capacity);
-  }
-  if (input.description !== undefined) {
-    updates.push("description = ?");
-    params.push(input.description);
-  }
-  if (input.amenities !== undefined) {
-    updates.push("amenities = ?");
-    params.push(JSON.stringify(input.amenities));
-  }
-  if (input.photos !== undefined) {
-    updates.push("photos = ?");
-    params.push(JSON.stringify(input.photos));
-  }
-  if (input.total_rooms !== undefined) {
-    updates.push("total_rooms = ?");
-    params.push(input.total_rooms);
-  }
-
-  params.push(id);
-
-  await db.execute({ sql: `UPDATE room_types SET ${updates.join(", ")} WHERE id = ?`, args: params });
-
-  return getRoomType(id);
-}
-
-export async function deleteRoomType(id: string): Promise<{ message: string }> {
-  await getRoomType(id);
-
-  const roomsCount =
-    (await queryOne<{ count: number }>("SELECT COUNT(*) AS count FROM rooms WHERE room_type_id = ?", [id]))
-      ?.count ?? 0;
-
-  const reservationsCount =
-    (await queryOne<{ count: number }>(
-      "SELECT COUNT(*) AS count FROM reservations WHERE room_type_id = ?",
-      [id],
-    ))?.count ?? 0;
-
-  if (roomsCount > 0 || reservationsCount > 0) {
-    throw new HttpError(
-      409,
-      `Cannot delete room type: referenced by ${roomsCount} room(s) and ${reservationsCount} reservation(s)`,
-    );
-  }
-
-  await db.execute({ sql: "DELETE FROM room_types WHERE id = ?", args: [id] });
-  return { message: "Room type deleted successfully" };
+export async function deleteRoomType(id: string) {
+  return service.deleteRoomType(id);
 }

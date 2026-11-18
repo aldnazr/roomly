@@ -44,6 +44,7 @@ function mapReservationHistoryRow(row: ReservationHistoryRow): any {
     status: row.status,
     total_price: row.total_price,
     paid_at: row.paid_at,
+    payment_id: row.payment_id ?? null,
   };
 }
 

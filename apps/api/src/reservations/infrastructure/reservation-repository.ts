@@ -16,11 +16,19 @@ const BASE = `
     r.check_out AS check_out,
     r.status AS status,
     r.total_price AS total_price,
-    r.paid_at AS paid_at
+    r.paid_at AS paid_at,
+    p.id AS payment_id
   FROM reservations r
   LEFT JOIN guests g ON g.id = r.guest_id
   LEFT JOIN room_types rt ON rt.id = r.room_type_id
   LEFT JOIN rooms rm ON rm.id = r.room_id
+  LEFT JOIN payments p ON p.id = (
+    SELECT pay.id
+    FROM payments pay
+    WHERE pay.reservation_id = r.id
+    ORDER BY pay.created_at DESC, pay.id DESC
+    LIMIT 1
+  )
 `;
 
 export class LibsqlReservationRepository implements ReservationRepository {

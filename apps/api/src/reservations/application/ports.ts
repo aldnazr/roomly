@@ -13,6 +13,7 @@ export type ReservationHistoryRow = {
   status: string;
   total_price: number;
   paid_at: string | null;
+  payment_id: string | null;
 };
 
 export interface ReservationRepository {

@@ -167,7 +167,9 @@ export default function GuestPage() {
                   <Button
                     nativeButton={false}
                     render={
-                      <Link href={`/guest/pay/${activeReservation.id}`} />
+                      <Link
+                        href={`/guest/pay/${activeReservation.payment_id ?? activeReservation.id}`}
+                      />
                     }
                     className="group/cta rounded-full pr-1.5 pl-5"
                   >

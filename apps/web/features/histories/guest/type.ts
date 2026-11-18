@@ -20,6 +20,7 @@ interface Data {
   status: string;
   total_price: number;
   paid_at: string;
+  payment_id: string | null;
 }
 
 interface Guest {
